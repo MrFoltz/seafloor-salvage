@@ -1,0 +1,196 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Seafloor Salvage Leaderboard</title>
+<style>
+:root{--paper:#ecdcab;--card:#f6ecc8;--ink:#3a2a1c;--muted:#6b5538;--red:#a8432f;--green:#4f7a35;--blue:#2d6a94;--gold:#e6c15a;--shadow:rgba(58,42,28,.4);--hand:"Segoe Print","Bradley Hand","Chalkboard SE","Marker Felt","Comic Sans MS",cursive;--serif:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif}
+*{box-sizing:border-box}
+html{font-size:clamp(12px,min(1.45vw,2.35vh),30px);height:100%}
+body{margin:0;height:100vh;display:flex;flex-direction:column;overflow:hidden;color:var(--ink);font:1rem/1.3 var(--hand);background:var(--paper) radial-gradient(ellipse at 50% 15%,rgba(255,244,205,.6),rgba(120,85,40,.2) 95%) fixed}
+header,nav,#banner{flex:none}
+header{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;padding:.6rem 1.2rem .5rem;border-bottom:3px double var(--ink)}
+h1{font:italic 700 2.3rem/1.1 var(--serif);margin:0;text-shadow:2px 2px 0 rgba(230,193,90,.75)}
+h2{font:italic 700 1.35rem/1.1 var(--serif);margin:0 0 .4rem;border-bottom:2px solid var(--ink);padding-bottom:.2rem}
+.meta{color:var(--muted);font-size:.85rem}.btns{display:flex;gap:.4rem}
+button{font:700 .9rem var(--hand);color:var(--ink);background:var(--card);border:2px solid var(--ink);border-radius:5px;padding:.25rem .7rem;cursor:pointer;box-shadow:2px 2px 0 var(--shadow)}button:hover{background:#efe0a8}button.on{background:var(--gold)}
+nav{display:flex;gap:.45rem;flex-wrap:wrap;padding:.5rem 1.2rem 0}
+nav button{font-size:1rem}nav button.sel{background:var(--gold);box-shadow:3px 3px 0 var(--shadow)}
+#banner{margin:.5rem 1.2rem 0;padding:.4rem .9rem;border:2px solid var(--ink);border-radius:5px;font-weight:800;background:#f3d7c8;color:#7a2a10}#banner.good{background:#dcebc4;color:#2f5a1a}
+main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:minmax(0,1.4fr) minmax(0,1fr);gap:.8rem;padding:.7rem 1.2rem .9rem}
+section{display:flex;flex-direction:column;min-height:0;overflow:hidden;background:var(--card);border:2px solid var(--ink);border-radius:4px 9px 5px 10px/9px 4px 10px 5px;padding:.5rem 1rem .6rem;box-shadow:3px 4px 0 var(--shadow)}
+ol,ul{list-style:none;margin:0;padding:0;flex:1;min-height:0;overflow:hidden}
+#partBody{flex:1;min-height:0;overflow:hidden;display:flex;flex-direction:column}.prow.grow{flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.row{display:grid;grid-template-columns:2.4rem minmax(0,1fr) 4.6rem 3.4rem 4.6rem;align-items:center;gap:.5rem;padding:.22rem .4rem;border-top:2px dotted rgba(58,42,28,.4)}
+.row .rk{font-weight:800;text-align:center}.row .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:700}.row .sc{font-weight:800;text-align:right}.row .gm,.row .ag{color:var(--muted);font-size:.8rem;text-align:right}
+.row.hd{border-top:0;color:var(--muted);font-size:.75rem;font-weight:700}.row.hd .sc,.row.hd .nm{font-weight:700}
+.row.r1{background:linear-gradient(90deg,rgba(230,193,90,.65),transparent 90%);font-size:1.3em}.row.r2{background:linear-gradient(90deg,rgba(190,190,200,.6),transparent 90%);font-size:1.15em}.row.r3{background:linear-gradient(90deg,rgba(205,140,90,.5),transparent 90%);font-size:1.05em}
+.tag{font-size:.7rem;border:1.5px solid var(--ink);border-radius:4px;padding:0 .25rem;margin-left:.3rem;color:var(--muted);vertical-align:.1rem}
+.empty{color:var(--muted);padding:.6rem .2rem;font-style:italic}
+.new{animation:flash 1s 7}@keyframes flash{0%,100%{background-color:transparent}50%{background-color:rgba(110,180,80,.65)}}
+.prow{margin:.35rem 0}.prow b{font-size:1.1em}.pbars{display:grid;grid-template-columns:1fr 1fr;gap:1rem}.bar{height:.95rem;border:2px solid var(--ink);border-radius:4px;background:rgba(255,250,230,.6);overflow:hidden}.bar i{display:block;height:100%;background:repeating-linear-gradient(45deg,#6f9a4a,#6f9a4a 7px,#5d8a3b 7px,#5d8a3b 14px);transition:width .6s}.bar.q i{background:repeating-linear-gradient(45deg,#d9a843,#d9a843 7px,#c8982f 7px,#c8982f 14px)}
+.names{font-size:.85rem;color:var(--ink);line-height:1.5;flex:1;min-height:0;overflow:hidden}.names span{display:inline-block;border:1.5px solid var(--ink);border-radius:4px;padding:0 .35rem;margin:.1rem .2rem .1rem 0;background:rgba(255,250,230,.6)}.names span.warn{background:#f3d7c8}
+.feed li{padding:.18rem 0;border-top:2px dotted rgba(58,42,28,.35);font-size:.9rem}.feed li small{color:var(--muted)}
+.wide{grid-column:1/-1}
+.modal{position:fixed;inset:0;z-index:20;display:flex;align-items:center;justify-content:center;background:rgba(40,28,16,.6);padding:1rem}.modal[hidden]{display:none}.box{background:var(--card);border:3px solid var(--ink);border-radius:6px;padding:1rem 1.3rem;max-width:34rem;width:100%;max-height:92vh;overflow:auto;box-shadow:4px 5px 0 var(--shadow)}
+.box label{display:block;font-weight:800;margin:.5rem 0 .15rem}.box input[type=text],.box select{font:700 1rem var(--hand);width:100%;padding:.3rem .5rem;border:2px solid var(--ink);border-radius:5px;background:rgba(255,250,230,.7);color:var(--ink)}.box p{margin:.35rem 0}.small{font-size:.8rem;color:var(--muted)}.err{color:var(--red);font-weight:800}
+@media (max-width:900px){body{height:auto;min-height:100vh;overflow:auto;display:block}main{display:block}section{margin-bottom:.8rem}ol,ul,#partBody{overflow:visible}}
+</style>
+</head>
+<body>
+<header>
+  <div><h1 id="ttl">Seafloor Salvage Leaderboard</h1><div class="meta"><span id="sub"></span> <span id="upd"></span></div></div>
+  <div class="btns"><button id="bRot" type="button" title="Cycle through the classes automatically">&#10227; Rotate classes</button><button id="bSet" type="button" title="Settings">&#9881; Settings</button><button id="bFs" type="button" title="Full screen">&#9974; Full screen</button></div>
+</header>
+<nav id="tabs"></nav>
+<div id="banner" hidden role="status" aria-live="polite"></div>
+<main>
+  <section id="bdC"><h2 id="hC">Classic &middot; points</h2><ol id="listC"></ol></section>
+  <section id="bdA"><h2 id="hA">Advanced &middot; dollars</h2><ol id="listA"></ol></section>
+  <section id="part"><h2>Participation</h2><div id="partBody"></div></section>
+  <section class="feed" id="feed"><h2>Latest</h2><ul id="feedList"></ul></section>
+</main>
+
+<div id="setup" class="modal" hidden><div class="box">
+  <h2>Connect the leaderboard</h2>
+  <p id="setupMsg" class="err"></p>
+  <p>Paste the same <b>Web app address</b> (it ends in <b>/exec</b>) and <b>class code</b> your students' game uses. (If this page sits next to your game's <b>config.js</b> on GitHub, it finds them by itself and you will not see this box.)</p>
+  <label for="cUrl">Web app address</label><input id="cUrl" type="text" placeholder="https://script.google.com/macros/s/.../exec" autocomplete="off">
+  <label for="cCode">Class code</label><input id="cCode" type="text" autocomplete="off">
+  <p style="margin-top:.8rem"><button id="cGo" type="button" class="on">Show the leaderboard</button> <button id="cDemo" type="button">Try it with pretend data</button></p>
+</div></div>
+
+<div id="setDlg" class="modal" hidden><div class="box">
+  <h2>Leaderboard settings</h2>
+  <label for="oNames">Student names</label><select id="oNames"><option value="short">First name and last initial</option><option value="full">Full names</option></select>
+  <label for="oRanked">Which games are ranked</label><select id="oRanked"><option value="standard">Standard settings only (fair for everyone)</option><option value="all">All games, including custom settings</option></select>
+  <label for="oWin">Time window</label><select id="oWin"><option value="today">Today</option><option value="2h">Last 2 hours</option><option value="week">Last 7 days</option><option value="all">All time</option></select>
+  <label for="oTop">Rows per board</label><select id="oTop"><option value="5">Top 5</option><option value="8">Top 8</option><option value="10">Top 10</option><option value="15">Top 15</option></select>
+  <label for="oRef">Refresh every</label><select id="oRef"><option value="10">10 seconds</option><option value="15">15 seconds</option><option value="30">30 seconds</option><option value="60">60 seconds</option></select>
+  <p class="small">Each student's best score counts. Names are shortened by the Sheet before they ever reach this page, unless you choose full names.</p>
+  <p style="margin-top:.8rem"><button id="oDone" type="button" class="on">Done</button> <button id="oConn" type="button">Change connection</button></p>
+</div></div>
+
+<script src="config.js"></script>
+<script>
+(function () {
+'use strict';
+const $ = id => document.getElementById(id), esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const CFG = window.LAB_CONFIG || {}, LBC = CFG.leaderboard || {}, KEY = 'essgame:lb:v1', CONN = 'essgame:lb:conn';
+const lsGet = k => { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } }, lsSet = (k, v) => { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const DEF = Object.assign({ names: 'short', ranked: 'standard', win: 'today', refresh: 15, rotate: false, top: 8, rotateEvery: 20, title: 'Seafloor Salvage Leaderboard' }, LBC);
+const O = Object.assign({}, DEF, lsGet(KEY) || {}); O.period = 'all';
+const save = () => lsSet(KEY, { names: O.names, ranked: O.ranked, win: O.win, refresh: O.refresh, rotate: O.rotate, top: O.top });
+const now = () => (typeof window.__now === 'number' ? window.__now : Date.now());
+let demo = /[?&#]demo(=1)?\b/.test(location.search + location.hash);
+let DATA = null, lastOk = 0, rotTimer = 0, refTimer = 0, flash = {}, prevBest = {}, prevLead = {}, lastView = '', firstLoad = true, bannerT = 0, errShown = false;
+
+// ---------- the numbers ----------
+function startOfDay(ms) { const d = new Date(ms); d.setHours(0, 0, 0, 0); return d.getTime(); }
+function sinceOf(win, ms) { return win === 'all' ? 0 : win === 'week' ? ms - 7 * 864e5 : win === '2h' ? ms - 2 * 36e5 : startOfDay(ms); }
+const periodLabel = p => /^\d+$/.test(p) ? 'Period ' + p : p;
+function compute(data, o, ms) {
+  const since = sinceOf(o.win, ms), inWin = e => { const t = Date.parse(e.ts); return !isNaN(t) && t >= since; };
+  const all = [].concat(data.games, data.quizzes, data.roster);
+  const periods = Array.from(new Set(all.map(e => e.period).filter(Boolean))).sort((a, b) => (/^\d+$/.test(a) && /^\d+$/.test(b)) ? a - b : (/^\d+$/.test(a) ? -1 : /^\d+$/.test(b) ? 1 : a.localeCompare(b)));
+  const pf = e => o.period === 'all' || e.period === o.period, games = data.games.filter(inWin).filter(pf), quizzes = data.quizzes.filter(inWin).filter(pf);
+  const ranked = games.filter(g => o.ranked === 'all' || g.standard), boards = {};
+  for (const mode of ['classic', 'advanced']) { const by = {}; ranked.filter(g => g.mode === mode).forEach(g => { const b = by[g.key] || (by[g.key] = { key: g.key, name: g.name, period: g.period, best: -1, bestTs: '', count: 0, players: 1 }); b.count++; if (g.score > b.best || (g.score === b.best && g.ts < b.bestTs)) { b.best = g.score; b.bestTs = g.ts; b.players = g.players; } }); boards[mode] = Object.keys(by).map(k => by[k]).sort((a, b) => b.best - a.best || (a.bestTs < b.bestTs ? -1 : 1)); }
+  const names = {}; games.concat(quizzes).forEach(e => { names[e.key] = e.name; });
+  const playedKeys = new Set(games.map(g => g.key)), quizKeys = new Set(quizzes.map(q => q.key)), seen = new Set([...playedKeys, ...quizKeys]);
+  const recent = e => { const t = Date.parse(e.ts); return t >= ms - 5 * 6e4; }; const activeNow = new Set(games.concat(quizzes).filter(recent).map(e => e.key));
+  const roster = data.roster.filter(pf), hasRoster = data.roster.length > 0;
+  const part = { hasRoster, seen: seen.size, played: playedKeys.size, quizzed: quizKeys.size, active: activeNow.size, games: games.length };
+  if (hasRoster) { part.total = roster.length; part.rPlayed = roster.filter(r => playedKeys.has(r.key)).length; part.rQuizzed = roster.filter(r => quizKeys.has(r.key)).length; part.notPlayed = roster.filter(r => !playedKeys.has(r.key)).map(r => r.name).sort(); part.notQuizzed = roster.filter(r => !quizKeys.has(r.key)).map(r => r.name).sort(); const onKeys = new Set(roster.map(r => r.key)); part.offRoster = Array.from(seen).filter(k => !onKeys.has(k)).map(k => names[k]).sort(); }
+  const feed = games.map(g => ({ ts: g.ts, name: g.name, period: g.period, kind: 'game', mode: g.mode, score: g.score, standard: g.standard })).concat(quizzes.map(q => ({ ts: q.ts, name: q.name, period: q.period, kind: 'quiz', score: q.score, seconds: q.seconds }))).sort((a, b) => a.ts < b.ts ? 1 : -1).slice(0, 8);
+  return { periods, boards, part, feed, since, top: o.top };
+}
+// ---------- demo data (pretend class, so you can see how it looks) ----------
+function demoData(ms, tick) {
+  let s = 12345; const rnd = () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+  const first = ['Anchor', 'Buoy', 'Coral', 'Dolphin', 'Eddy', 'Flipper', 'Galleon', 'Harbor', 'Isle', 'Jelly', 'Kelp', 'Lagoon', 'Marlin', 'Nautilus', 'Orca', 'Pearl', 'Quill', 'Reef'], last = ['Stone', 'Park', 'Ng', 'Lee', 'Ruiz', 'Cole', 'Diaz', 'Wu', 'Hart', 'Kim', 'Bell', 'Shah'];
+  const roster = [], games = [], quizzes = [], hkey = x => { let h = 5381; for (let i = 0; i < x.length; i++) h = ((h * 33) ^ x.charCodeAt(i)) >>> 0; return h.toString(36); };
+  [1, 2, 3, 4].forEach(per => { for (let i = 0; i < 16; i++) { const f = first[(i + per * 3) % first.length], l = last[(i * 5 + per) % last.length], nm = f + ' ' + l.charAt(0) + '.', key = hkey(per + f + l); roster.push({ period: String(per), key, name: nm });
+    const active = rnd() < (per === 3 ? 0.55 : 0.82); if (!active) continue; const ng = 1 + Math.floor(rnd() * 4) + (tick > 0 && rnd() < 0.25 ? 1 : 0); const t0 = startOfDay(ms) + 8 * 36e5 + per * 20 * 6e4;
+    quizzes.push({ ts: new Date(t0 + rnd() * 30 * 6e4).toISOString(), key, onRoster: true, name: nm, period: String(per), mode: 'classic', score: Math.round((1 + rnd() * 2) * 4) / 4, seconds: 20 + rnd() * 40 });
+    for (let g = 0; g < ng; g++) { const adv = rnd() < 0.4, ts = Math.min(ms - 30e3, t0 + (10 + g * 9 + rnd() * 5) * 6e4); games.push({ ts: new Date(ts).toISOString(), key, onRoster: true, name: nm, period: String(per), mode: adv ? 'advanced' : 'classic', players: rnd() < 0.3 ? 2 : 1, score: adv ? Math.round((150 + rnd() * 700) / 10) * 10 : Math.round(20 + rnd() * 90), delivered: 10, gold: 1, seconds: 200, won: null, standard: rnd() < 0.9 }); } } });
+  return { ok: true, now: new Date(ms).toISOString(), names: 'short', hasRoster: true, roster, games, quizzes };
+}
+// ---------- drawing it ----------
+function ago(ts, ms) { const m = Math.max(0, Math.round((ms - Date.parse(ts)) / 6e4)); return m < 1 ? 'just now' : m < 60 ? m + ' min ago' : m < 1440 ? Math.round(m / 60) + ' h ago' : Math.round(m / 1440) + ' d ago'; }
+const medal = i => i === 0 ? '\uD83E\uDD47' : i === 1 ? '\uD83E\uDD48' : i === 2 ? '\uD83E\uDD49' : String(i + 1);
+function renderBoard(id, list, unit, mode, ms, top) {
+  const el = $(id); if (!list.length) { el.innerHTML = '<li class="empty">No ranked games yet. Be the first!</li>'; return; }
+  el.innerHTML = '<li class="row hd"><span></span><span class="nm">Student</span><span class="sc">Best</span><span class="gm">Games</span><span class="ag">Last</span></li>' + list.slice(0, top).map((b, i) => '<li class="row' + (i < 3 ? ' r' + (i + 1) : '') + (flash[mode + '|' + b.key] > ms ? ' new' : '') + '"><span class="rk">' + medal(i) + '</span><span class="nm">' + esc(b.name) + (b.players === 2 ? '<span class="tag">2P</span>' : '') + (O.period === 'all' ? '<span class="tag">P' + esc(b.period) + '</span>' : '') + '</span><span class="sc">' + unit + b.best + '</span><span class="gm">' + b.count + '</span><span class="ag">' + ago(b.bestTs, ms) + '</span></li>').join('');
+}
+function listNames(arr, cls, max) { if (!arr.length) return '<span class="small">Everyone!</span>'; return arr.slice(0, max).map(n => '<span class="' + (cls || '') + '">' + esc(n) + '</span>').join('') + (arr.length > max ? ' <span class="small">+' + (arr.length - max) + ' more</span>' : ''); }
+function renderPart(p) {
+  const bar = (n, d, cls) => '<div class="bar ' + (cls || '') + '"><i style="width:' + (d ? Math.round(100 * n / d) : 0) + '%"></i></div>';
+  let h = ''; const who = O.period === 'all' ? 'all classes' : periodLabel(O.period);
+  if (p.hasRoster) {
+    h += '<div class="pbars"><div class="prow"><b>' + p.rPlayed + ' of ' + p.total + '</b> have played a game <span class="small">(' + who + ')</span>' + bar(p.rPlayed, p.total) + '</div><div class="prow"><b>' + p.rQuizzed + ' of ' + p.total + '</b> have taken the quiz' + bar(p.rQuizzed, p.total, 'q') + '</div></div>';
+    h += '<div class="prow grow"><b>Haven\u2019t played a game yet:</b><div class="names" id="namesBox">' + listNames(p.notPlayed, 'warn', 400) + '</div></div>';
+    if (p.offRoster.length) h += '<div class="prow small">Names not on your roster (maybe a nickname or typo): ' + p.offRoster.slice(0, 8).map(esc).join(', ') + (p.offRoster.length > 8 ? ' +' + (p.offRoster.length - 8) + ' more' : '') + '</div>';
+  } else {
+    h += '<div class="prow"><b>' + p.seen + '</b> students have played or taken the quiz <span class="small">(' + who + ')</span></div><div class="prow"><b>' + p.played + '</b> have finished a game \u00b7 <b>' + p.quizzed + '</b> have taken the quiz \u00b7 <b>' + p.games + '</b> games in all</div><div class="prow small">Add your class list to the <b>Roster</b> tab of your Sheet to see exactly who has not played yet.</div>';
+  }
+  h += '<div class="small" style="flex:none;margin-top:.15rem">Active in the last 5 minutes: <b>' + p.active + '</b></div>'; $('partBody').innerHTML = h;
+}
+function renderFeed(feed, ms) { $('feedList').innerHTML = feed.length ? feed.map(f => '<li>' + (f.kind === 'game' ? '\uD83C\uDFC1 <b>' + esc(f.name) + '</b> scored <b>' + (f.mode === 'advanced' ? '$' : '') + f.score + (f.mode === 'advanced' ? '' : ' pts') + '</b> in ' + (f.mode === 'advanced' ? 'Advanced' : 'Classic') + (f.standard ? '' : ' <small>(custom settings)</small>') : '\uD83D\uDCDD <b>' + esc(f.name) + '</b> took the quiz: <b>' + f.score + '/3</b>') + ' <small>P' + esc(f.period) + ' \u00b7 ' + ago(f.ts, ms) + '</small></li>').join('') : '<li class="empty">Nothing yet today.</li>'; }
+function render() {
+  if (!DATA) return; const ms = now(), C = compute(DATA, O, ms); $('ttl').textContent = O.title;
+  $('sub').textContent = ({ today: 'Today', '2h': 'Last 2 hours', week: 'Last 7 days', all: 'All time' })[O.win] + ' \u00b7 ' + (O.ranked === 'standard' ? 'standard-settings games only' : 'all games') + ' \u00b7 ' + (O.period === 'all' ? 'all classes' : periodLabel(O.period));
+  $('upd').textContent = '\u00b7 updated ' + new Date(lastOk || ms).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit', second: '2-digit' });
+  // class tabs
+  const tabs = ['all'].concat(C.periods); if (tabs.indexOf(O.period) < 0) O.period = 'all';
+  $('tabs').innerHTML = tabs.map(p => '<button type="button" data-p="' + esc(p) + '" class="' + (p === O.period ? 'sel' : '') + '">' + (p === 'all' ? 'All classes' : esc(periodLabel(p))) + '</button>').join('');
+  $('tabs').querySelectorAll('button').forEach(b => b.addEventListener('click', () => { O.period = b.dataset.p; stopRotate(); render(); }));
+  // flash rows that are new or improved since the last refresh, and announce a new #1 (but not when you merely switch tabs or filters)
+  const vk = [O.period, O.ranked, O.win, O.top, O.names].join('|'); if (vk !== lastView) { firstLoad = true; flash = {}; lastView = vk; }
+  const best = {}, lead = {}; ['classic', 'advanced'].forEach(m => { C.boards[m].slice(0, O.top).forEach(b => { best[m + '|' + b.key] = b.best; }); const t = C.boards[m][0]; lead[m] = t ? t.key + ':' + t.best : ''; });
+  if (!firstLoad) { Object.keys(best).forEach(k => { if (prevBest[k] === undefined || best[k] > prevBest[k]) flash[k] = ms + 9000; });
+    ['classic', 'advanced'].forEach(m => { const t = C.boards[m][0]; if (t && lead[m] !== prevLead[m] && prevLead[m]) banner('\uD83C\uDFC6 New leader in ' + (m === 'advanced' ? 'Advanced' : 'Classic') + ': ' + t.name + ' with ' + (m === 'advanced' ? '$' : '') + t.best + (m === 'advanced' ? '' : ' points') + '!', true); }); }
+  prevLead = lead;
+  prevBest = best; firstLoad = false;
+  renderBoard('listC', C.boards.classic, '', 'classic', ms, O.top); renderBoard('listA', C.boards.advanced, '$', 'advanced', ms, O.top); renderPart(C.part); renderFeed(C.feed, ms); $('bRot').classList.toggle('on', O.rotate); fit();
+}
+// nothing on this screen scrolls: whatever does not fit is left out (and the not-yet-played list ends with "+N more")
+function fit() {
+  const bottom = el => el.getBoundingClientRect().bottom;
+  ['listC', 'listA', 'feedList'].forEach(id => { const el = $(id); if (!el.clientHeight) return; [].forEach.call(el.children, c => { c.style.display = ''; }); const lim = bottom(el) + 1; [].forEach.call(el.children, c => { if (!c.classList.contains('hd') && bottom(c) > lim) c.style.display = 'none'; }); });
+  const nb = $('namesBox'); if (nb && nb.clientHeight) { const old = nb.querySelector('.more'); if (old) old.remove(); const sp = [].slice.call(nb.querySelectorAll('span')); sp.forEach(s => { s.style.display = ''; }); const lim = bottom(nb) + 1; let k = sp.findIndex(s => bottom(s) > lim);
+    if (k >= 0) { k = Math.max(0, k - 1); for (let i = k; i < sp.length; i++) sp[i].style.display = 'none'; const m = document.createElement('span'); m.className = 'more small'; m.textContent = '+' + (sp.length - k) + ' more'; nb.appendChild(m); while (bottom(m) > lim && k > 0) { k--; sp[k].style.display = 'none'; m.textContent = '+' + (sp.length - k) + ' more'; } } }
+}
+function banner(msg, good) { const b = $('banner'); b.textContent = msg; b.className = good ? 'good' : ''; b.hidden = false; clearTimeout(bannerT); if (good) bannerT = setTimeout(() => { b.hidden = true; }, 10000); }
+// ---------- getting the data ----------
+const conn = () => { const s = lsGet(CONN) || {}; return { url: CFG.submitUrl || s.url || '', code: CFG.classCode || s.code || '' }; };
+async function load() {
+  if (demo) { DATA = demoData(now(), Math.floor((now() - (window.__t0 || (window.__t0 = now()))) / 1000 / 15)); lastOk = now(); $('banner').hidden = true; render(); return; }
+  const c = conn(); if (!c.url || !c.code) { openSetup(''); return; }
+  try { const r = await fetch(c.url + (c.url.indexOf('?') >= 0 ? '&' : '?') + 'action=leaderboard&code=' + encodeURIComponent(c.code) + '&names=' + O.names + '&_=' + now()); const j = await r.json();
+    if (!j || !j.ok) { if (j && /code/.test(j.error || '')) { openSetup('The class code was not accepted. Check that it matches CLASS_CODE in your Google script.'); return; } banner('The Sheet answered with: ' + ((j && j.error) || 'an error') + '. Still trying\u2026'); errShown = true; return; }
+    DATA = j; lastOk = now(); if (errShown) { $('banner').hidden = true; errShown = false; } render();
+  } catch (e) { banner('Can\u2019t reach the Sheet right now (check the internet). Showing the last scores we had. Still trying\u2026'); errShown = true; }
+}
+function schedule() { clearInterval(refTimer); refTimer = setInterval(load, Math.max(0.2, +O.refresh) * 1000); }
+function startRotate() { stopRotate(true); rotTimer = setInterval(() => { if (!DATA) return; const t = ['all'].concat(compute(DATA, Object.assign({}, O, { period: 'all' }), now()).periods), i = t.indexOf(O.period); O.period = t[(i + 1) % t.length]; render(); }, Math.max(0.2, +O.rotateEvery) * 1000); O.rotate = true; }
+function stopRotate(keep) { clearInterval(rotTimer); rotTimer = 0; if (!keep) { O.rotate = false; save(); } }
+// ---------- dialogs ----------
+function openSetup(msg) { $('setupMsg').textContent = msg || ''; const c = conn(); $('cUrl').value = c.url; $('cCode').value = c.code; $('setup').hidden = false; }
+$('cGo').addEventListener('click', () => { const u = $('cUrl').value.trim(), c = $('cCode').value.trim(); if (!/^https?:\/\//.test(u) || !c) { $('setupMsg').textContent = 'Please paste the Web app address (starting with https://) and the class code.'; return; } lsSet(CONN, { url: u, code: c }); $('setup').hidden = true; load(); });
+$('cDemo').addEventListener('click', () => { demo = true; $('setup').hidden = true; load(); });   // pretend data, started right here (no reload needed)
+function fillSettings() { $('oNames').value = O.names; $('oRanked').value = O.ranked; $('oWin').value = O.win; $('oTop').value = String(O.top); const r = [10, 15, 30, 60].reduce((a, b) => Math.abs(b - O.refresh) < Math.abs(a - O.refresh) ? b : a); $('oRef').value = String(r); }
+$('bSet').addEventListener('click', () => { fillSettings(); $('setDlg').hidden = false; });
+$('oDone').addEventListener('click', () => { const nm = $('oNames').value !== O.names; O.names = $('oNames').value; O.ranked = $('oRanked').value; O.win = $('oWin').value; O.top = +$('oTop').value; O.refresh = +$('oRef').value; save(); schedule(); $('setDlg').hidden = true; if (nm) load(); else render(); });
+$('oConn').addEventListener('click', () => { $('setDlg').hidden = true; openSetup(''); });
+$('bRot').addEventListener('click', () => { if (O.rotate) stopRotate(); else { startRotate(); save(); } render(); });
+$('bFs').addEventListener('click', () => { const d = document.documentElement; if (document.fullscreenElement) document.exitFullscreen(); else if (d.requestFullscreen) d.requestFullscreen(); });
+document.addEventListener('keydown', e => { if (e.key === 'Escape') { $('setDlg').hidden = true; } if (e.key === 'f' && !/INPUT|SELECT/.test((document.activeElement || {}).tagName || '')) $('bFs').click(); });
+let rz = 0; window.addEventListener('resize', () => { clearTimeout(rz); rz = setTimeout(render, 150); });
+window.__lb = { compute, demoData, O, load, render, getData: () => DATA, flash: () => flash, startRotate, stopRotate, conn };
+if (O.rotate) startRotate(); schedule(); load();
+})();
+</script>
+</body>
+</html>

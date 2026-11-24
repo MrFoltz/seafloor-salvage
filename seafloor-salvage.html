@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
+<title>Seafloor Salvage: A Plate Tectonics Review Game</title>
+<style>
+:root{--paper:#ecdcab;--dot:#d9c48a;--card:#f6ecc8;--ink:#3a2a1c;--muted:#6b5538;--shadow:rgba(58,42,28,.4);--blue:#7fb0c8;--orange:#e8964a;--yellow:#e6c15a;--red:#a8432f;--green:#6a8f4a;--p1:#b5483a;--p2:#3f7396;--ok:#2f6b2a;--bad:#a82a1a;--hand:"Segoe Print","Bradley Hand","Chalkboard SE","Marker Felt","Comic Sans MS",cursive;--serif:"Palatino Linotype","Book Antiqua",Palatino,Georgia,serif;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#241c12;--dot:#33281a;--card:#322818;--ink:#f1e4bc;--muted:#cdb98a;--shadow:rgba(0,0,0,.5);--ok:#9bd48a;--bad:#ff9a85;--blue:#4f86a8}}
+:root[data-theme="dark"]{--paper:#241c12;--dot:#33281a;--card:#322818;--ink:#f1e4bc;--muted:#cdb98a;--shadow:rgba(0,0,0,.5);--ok:#9bd48a;--bad:#ff9a85;--blue:#4f86a8}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}*{box-sizing:border-box}
+body{margin:0;background:var(--paper);background-image:radial-gradient(ellipse at 50% 20%,rgba(255,244,205,.55),rgba(120,85,40,.16) 90%),url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' seed='4'/%3E%3CfeColorMatrix values='0 0 0 0 .45 0 0 0 0 .32 0 0 0 0 .15 0 0 0 .22 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23n)'/%3E%3C/svg%3E");background-attachment:fixed;color:var(--ink);font:17px/1.5 var(--hand)}
+.wrap{max-width:1080px;margin:0 auto;padding:14px 14px 40px}
+h1,h2,h3{font-family:var(--serif);font-style:italic;margin:0;font-weight:700}
+h1{font-size:clamp(32px,6vw,54px);line-height:1.05;letter-spacing:1px;text-shadow:2px 2px 0 rgba(230,193,90,.75);border-bottom:3px double var(--ink);padding-bottom:6px}
+h2{font-size:26px;margin-bottom:8px}h3{font-size:20px;margin:10px 0 4px}
+.sub{margin:8px 0 14px;color:var(--muted);font-size:18px;font-style:italic}
+.box{background:var(--card);border:2px solid var(--ink);border-radius:3px 7px 4px 8px/7px 3px 8px 4px;box-shadow:3px 4px 0 var(--shadow),inset 0 0 0 5px var(--card),inset 0 0 0 6px rgba(58,42,28,.45);padding:16px 20px;margin:14px 0}
+.btn{font:800 19px var(--hand);color:#3a2a1c;background:#e6c15a;border:2px solid var(--ink);border-radius:4px 8px 5px 9px/8px 4px 9px 5px;padding:8px 20px;cursor:pointer;box-shadow:3px 3px 0 var(--shadow);transition:transform .08s}
+.btn:hover{transform:translate(-1px,-1px)}.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--shadow)}
+.btn.blue{background:#8fbdd2}.btn.green{background:#a9c98a}.btn.red{background:#d99a8a}.btn.plain{background:var(--card);color:var(--ink)}.btn.big{font-size:26px;padding:12px 30px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none;box-shadow:3px 3px 0 var(--shadow)}.btn:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid #3f7396;outline-offset:2px}
+input[type=text],select{font:700 18px var(--hand);color:var(--ink);background:rgba(255,250,230,.55);border:2px solid var(--ink);border-radius:3px 7px 4px 8px/7px 3px 8px 4px;padding:7px 10px}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) input[type=text],:root:not([data-theme="light"]) select{background:rgba(0,0,0,.25)}}
+input[type=text]{width:100%;max-width:300px}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.col{flex:1 1 280px}
+.steps{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 6px}.steps span{padding:3px 14px;border:2px solid var(--ink);border-radius:3px 8px 4px 9px;background:var(--card);font-weight:800;font-size:16px}.steps span.on{background:#e6c15a;color:#3a2a1c}
+canvas{display:block;max-width:100%}
+.fig{border:2px solid var(--ink);border-radius:3px 7px 4px 8px;overflow:hidden;background:#ecdcab;max-width:640px;box-shadow:2px 3px 0 var(--shadow)}
+.notes{margin:8px 0;padding-left:22px}.notes li{margin:6px 0}
+.helper{background:rgba(230,193,90,.5);color:var(--ink);border:2px dashed var(--ink);border-radius:4px;padding:8px 14px;margin:10px 0;font-size:16px}
+.q{border-top:2px dotted var(--ink);padding:12px 0 6px;display:flex;gap:12px}.qn{flex:0 0 34px;height:34px;border:2px solid var(--ink);border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:800;background:#e6c15a;color:#3a2a1c;font-family:var(--serif)}
+.qb{flex:1;min-width:0}.qt{margin:2px 0 8px;font-weight:700}.pts{font-weight:600;font-size:14px;color:var(--muted)}
+.opts{display:grid;gap:8px}.opt{text-align:left;font:700 17px var(--hand);color:var(--ink);background:rgba(255,250,230,.45);border:2px solid var(--ink);border-radius:3px 7px 4px 8px/7px 3px 8px 4px;padding:8px 14px;cursor:pointer}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .opt{background:rgba(0,0,0,.2)}}
+.opt:hover:not(:disabled){background:rgba(143,189,210,.55)}.opt.right{background:rgba(150,200,120,.75);color:#1f3a14;border-color:var(--ok)}.opt.wrong{background:rgba(217,154,138,.7);color:#4a1a10;border-color:var(--bad);text-decoration:line-through;opacity:.85}.opt:disabled{cursor:default}
+.fb{margin:8px 0 2px;font-weight:700;min-height:1.2em}.fb.ok{color:var(--ok)}.fb.bad{color:var(--bad)}.hint{font-weight:600;color:var(--muted);margin-top:4px}
+.lab{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin:8px 0}.lab label{font-weight:800}.lab select{width:100%;margin-top:3px}.lab .ck{font-size:20px}
+.stat{font-weight:800}.stat.ok{color:var(--ok)}.stat.bad{color:var(--bad)}
+.prog{height:22px;border:2px solid var(--ink);border-radius:3px 8px 4px 9px;background:rgba(255,250,230,.5);overflow:hidden;min-width:200px;flex:1}.prog i{display:block;height:100%;background:repeating-linear-gradient(45deg,#e8964a,#e8964a 6px,#d97f33 6px,#d97f33 12px);width:0;transition:width .3s}
+.sticky{position:sticky;top:0;z-index:5;padding:6px 0}
+.how{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:12px}.how .box{margin:0}.kbd{display:inline-block;border:2px solid var(--ink);border-radius:5px;padding:0 7px;background:var(--card);font-weight:800;box-shadow:2px 2px 0 var(--shadow);margin:0 1px}
+.stage{position:relative}#gc{border:3px solid var(--ink);border-radius:3px 7px 4px 8px;box-shadow:4px 5px 0 var(--shadow);background:#ecdcab;touch-action:none;width:100%}
+.hud{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:8px 0}
+.pads{display:none;gap:16px;justify-content:space-between;margin-top:10px;flex-wrap:wrap}.pads.on{display:flex}.pad{display:grid;grid-template-columns:repeat(3,64px);grid-template-rows:repeat(2,56px);gap:6px;align-items:center}.pad button{font:800 24px var(--hand);border:2px solid var(--ink);border-radius:6px;background:var(--card);color:var(--ink);touch-action:none;user-select:none}.pad .nm{grid-column:1/4;font-weight:800;text-align:center}
+.tbl{border-collapse:collapse;width:100%}.tbl th,.tbl td{border:2px solid var(--ink);padding:6px 10px;text-align:left}.tbl th{background:#e6c15a;color:#3a2a1c}
+.cover{position:absolute;inset:0;display:none;align-items:center;justify-content:center;background:rgba(236,220,171,.82);border-radius:6px}.cover.on{display:flex}.cover .box{text-align:center}
+.win{font-size:34px;font-weight:800}[hidden]{display:none!important}
+.small{font-size:15px;color:var(--muted)}.tag{display:inline-block;padding:1px 10px;border:2px solid var(--ink);border-radius:3px 8px 4px 9px;background:#e6c15a;color:#3a2a1c;font-weight:800;font-size:15px}
+.playing h1{font-size:clamp(24px,4vw,34px);padding-bottom:2px}.playing .sub{display:none}.playing .steps{margin:6px 0 4px}
+.qzwrap{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:start}.qzwrap.one{grid-template-columns:minmax(0,820px)}@media (max-width:820px){.qzwrap{grid-template-columns:1fr}}
+.qz{margin:0}.qzh{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:2px dotted var(--ink);padding-bottom:6px;margin-bottom:8px}.qzh b{font-family:var(--serif);font-size:22px}.tmr{font:800 22px var(--hand)}
+.dots{display:flex;gap:6px}.dots i{width:16px;height:16px;border:2px solid var(--ink);border-radius:50%}.dots i.on{background:#e6c15a}.dots i.ok{background:#8fb56a}
+.qfig canvas{max-height:180px;width:auto;max-width:100%;border:2px solid var(--ink);border-radius:3px;margin:2px 0 6px}
+.qopt{display:flex;gap:12px;align-items:center}.qopt .kbd{min-width:34px;text-align:center;font-size:18px}.qtx{font-size:19px;font-weight:700;margin:4px 0 10px}
+.shop{display:grid;grid-template-columns:repeat(auto-fit,minmax(310px,1fr));gap:10px;margin-top:10px}.shop[hidden]{display:none}.shopp{border:3px solid var(--ink);border-radius:3px 8px 4px 9px;background:var(--card);padding:8px 12px;box-shadow:3px 3px 0 var(--shadow)}.shopp h3{margin:0 0 4px;font-size:19px}
+.trk{display:flex;align-items:center;gap:8px;flex-wrap:wrap;border-top:2px dotted var(--ink);padding:5px 0;font-size:15px}.trk .nm{flex:1 1 150px}.trk .pip{display:inline-block;width:13px;height:13px;border:2px solid var(--ink);border-radius:50%;margin-right:3px;vertical-align:-2px}.trk .pip.on{background:#e6c15a}
+.trk .btn{font-size:15px;padding:3px 10px}.dockst{font-weight:800;font-size:15px}.dockst.on{color:var(--ok)}
+.modal{position:fixed;inset:0;z-index:60;display:flex;align-items:center;justify-content:center;background:rgba(40,28,16,.58);padding:12px}.modal[hidden]{display:none!important}.modalbox{width:100%;max-width:680px;max-height:90vh;overflow:auto;margin:0}
+.srow{display:flex;gap:12px;align-items:center;justify-content:space-between;border-top:2px dotted var(--ink);padding:7px 0;flex-wrap:wrap}.srow .nm{flex:1 1 230px;font-weight:700;font-size:16px;line-height:1.25}.srow .ctl{flex:0 1 270px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:flex-end}
+.srow input[type=range]{width:150px;accent-color:#a8432f}.srow output{min-width:70px;font-weight:800}.srow select{padding:4px 8px;font-size:16px}.srow input[type=checkbox]{width:22px;height:22px;accent-color:#a8432f}.srow .setl{display:flex;gap:6px;align-items:center;font-size:15px;font-weight:700}.lockt{font-size:13px;color:var(--muted);font-weight:600}.srow.off{opacity:.55}
+.pre{font-size:15px;padding:3px 12px}
+#setReset,#setDone{font-size:19px;padding:8px 22px;line-height:1.2}   /* the two buttons at the bottom of the settings dialog are exactly the same size */
+</style>
+</head>
+<body>
+<main class="wrap">
+  <h1>Seafloor Salvage</h1>
+  <p class="sub">A plate tectonics review game: spreading centers, magnetic stripes, and subduction zones</p>
+  <div class="steps" id="steps"><span id="stp1" class="on">1 Set up</span><span id="stp2">2 Quiz</span><span id="stp3">3 Play!</span></div>
+
+  <section id="vSetup">
+    <div class="box"><canvas id="art" class="fig" style="max-width:100%"></canvas></div>
+    <div class="box">
+      <h2>Who is playing?</h2>
+      <div class="row" style="margin-bottom:8px"><button class="btn blue" id="n1" type="button">1 player</button><button class="btn plain" id="n2" type="button">2 players</button></div>
+      <div class="row">
+        <div class="col"><h3 style="color:var(--p1)">Player 1</h3><label>Name<br><input id="nm0" type="text" maxlength="40" autocomplete="off"></label><br><label>Class period<br><input id="pd0" type="text" maxlength="12" autocomplete="off" style="max-width:120px"></label></div>
+        <div class="col" id="p2box" hidden><h3 style="color:var(--p2)">Player 2</h3><label>Name<br><input id="nm1" type="text" maxlength="40" autocomplete="off"></label><br><label>Class period<br><input id="pd1" type="text" maxlength="12" autocomplete="off" style="max-width:120px"></label></div>
+      </div>
+      <h3>Game mode</h3>
+      <div class="row" style="margin-bottom:6px"><button class="btn blue" id="md1" type="button">Classic: points</button><button class="btn plain" id="md2" type="button">Advanced: dollars and upgrades</button></div>
+      <p class="small" id="modeNote"></p>
+      <div id="homeBox" hidden style="margin:6px 0"><label>Your home port: <select id="homeSel"><option value="-1">Left island</option><option value="1">Right island</option></select></label></div>
+      <p class="small" id="targetNote"></p>
+      <p><button class="btn plain" id="setBtn" type="button">⚙ Game settings</button> <span class="small" id="setSummary"></span></p>
+      <p><button class="btn big green" id="goReview" type="button">Next: warm-up quiz</button> <span class="stat bad" id="setupMsg"></span></p>
+      <p class="small">First you answer <b>3 quick questions</b> (new ones every time you play, and your teacher sees your results). Then the game begins. With two players, you answer at the same time, and the faster player gets a head start in the game!</p>
+    </div>
+  </section>
+
+  <section id="vReview" hidden>
+    <div class="box" id="qzIntroBox"><h2>Warm-up quiz: 3 questions</h2><p id="qzIntro"></p><div class="row" id="qzKeys"></div>
+      <p><button class="btn big green" id="qzStart" type="button">Start the quiz!</button> <span class="small">(or press the space bar)</span></p></div>
+    <div class="box" id="qzCount" hidden style="text-align:center"><div class="win" id="qzCountN">3</div></div>
+    <div id="qzWrap" class="qzwrap" hidden></div>
+    <div class="box" id="qzDone" hidden></div>
+  </section>
+
+  <section id="vReady" hidden>
+    <div class="box"><h2>Quiz complete!</h2><div id="rdScores"></div></div>
+    <div class="box"><h2>How to play</h2>
+      <div class="how" id="howGrid"></div>
+    </div>
+    <p><button class="btn plain" id="setBtn2" type="button">⚙ Game settings</button> <span class="small" id="setSummary2"></span></p>
+    <p><button class="btn big green" id="goGame" type="button">Start the game!</button></p>
+  </section>
+
+  <section id="vGame" hidden>
+    <div class="hud"><span class="tag" id="gTag"></span><span><button class="btn plain" id="gPause" type="button">Pause (P)</button> <button class="btn plain" id="gSound" type="button">Sound: on</button> <button class="btn plain" id="gSet" type="button">⚙ Settings</button> <button class="btn plain" id="gTouch" type="button">On-screen buttons</button> <button class="btn plain" id="gQuit" type="button">Quit</button></span></div>
+    <div class="stage"><canvas id="gc" width="1000" height="640" aria-label="Seafloor Salvage game"></canvas><div class="cover" id="gCover"><div class="box"><h2 id="gCoverT">Paused</h2><p id="gCoverP">Press P or click Resume.</p><button class="btn green" id="gResume" type="button">Resume</button></div></div></div>
+    <div class="pads" id="pads"></div>
+    <div class="shop" id="shop" hidden></div>
+    <p class="small" id="gHelp"></p>
+  </section>
+
+  <section id="vOver" hidden>
+    <div class="box"><canvas id="art2" class="fig" style="max-width:100%"></canvas><h2 class="win" id="ovTitle"></h2><div id="ovBody"></div>
+      <p><button class="btn big green" id="again" type="button">Play again</button> <button class="btn plain" id="newp" type="button">New players</button></p></div>
+  </section>
+</main>
+<div id="setDlg" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="setTitle">
+  <div class="box modalbox">
+    <h2 id="setTitle">⚙ Game settings</h2>
+    <p class="small" id="setNote"></p>
+    <div class="row" style="margin:6px 0"><b>Quick presets:</b> <button class="btn plain pre" data-p="relaxed" type="button">Relaxed</button><button class="btn plain pre" data-p="normal" type="button">Normal</button><button class="btn plain pre" data-p="frantic" type="button">Frantic</button></div>
+    <div id="setBody"></div>
+    <p class="row" style="margin-top:10px"><button class="btn plain" id="setReset" type="button">Reset to normal</button><button class="btn green" id="setDone" type="button">Done</button></p>
+  </div>
+</div>
+<script src="config.js"></script>
+<script>
+// ===================== Seafloor Salvage: world geometry and game rules =====================
+const GW = 1000, GH = 540, CX = 500, WATER = 140, THICK = 22, DS = 3;
+const lerp = (a, b, t) => a + (b - a) * t, clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+function mulberry32(a) { return function () { a |= 0; a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+function cosTable(tab, d) { if (d <= tab[0][0]) return tab[0][1]; for (let i = 1; i < tab.length; i++) if (d <= tab[i][0]) { const t = (d - tab[i - 1][0]) / (tab[i][0] - tab[i - 1][0]), s = (1 - Math.cos(Math.PI * t)) / 2; return lerp(tab[i - 1][1], tab[i][1], s); } return tab[tab.length - 1][1]; }
+// top of the seafloor, measured as distance d from the ridge crest (right half; the left half is a mirror image)
+const TOPT = [[0, 277], [10, 268], [30, 257], [60, 253], [120, 266], [180, 284], [240, 302], [280, 314], [300, 326], [315, 386], [327, 382], [345, 344], [380, 262], [398, 196], [412, 146], [424, 112], [432, 104], [444, 114], [455, 132], [470, 158], [500, 184]];
+const topD = d => cosTable(TOPT, Math.abs(d)), floorAt = x => topD(x - CX);
+const SLAB_ANG = 22 * Math.PI / 180, D_TRENCH = 315, D_RIM = 300, D_VOLC = 430;
+const PATH = (() => {                                         // center line of the oceanic plate: along the seafloor, then down the slab
+  const raw = []; for (let d = 0; d <= D_TRENCH; d += 0.5) raw.push([d, topD(d) + THICK / 2]);
+  const y0 = topD(D_TRENCH) + THICK / 2; for (let t = 3; t <= 300; t += 3) { const d = D_TRENCH + t * Math.cos(SLAB_ANG); if (d > 500) break; raw.push([d, y0 + t * Math.sin(SLAB_ANG)]); }
+  const pts = [{ d: raw[0][0], y: raw[0][1], s: 0 }]; let L = 0, next = 0, sTrench = 0, sRim = 0;
+  for (let i = 1; i < raw.length; i++) { const seg = Math.hypot(raw[i][0] - raw[i - 1][0], raw[i][1] - raw[i - 1][1]); while (L + seg >= next + DS) { next += DS; const t = (next - L) / seg; pts.push({ d: lerp(raw[i - 1][0], raw[i][0], t), y: lerp(raw[i - 1][1], raw[i][1], t), s: next }); } L += seg; if (raw[i][0] <= D_TRENCH + 1e-6 && i < raw.length && Math.abs(raw[i][0] - D_TRENCH) < 0.3) sTrench = L; if (Math.abs(raw[i][0] - D_RIM) < 0.3 && !sRim) sRim = L; }
+  for (let i = 0; i < pts.length; i++) { const a = pts[Math.max(0, i - 1)], b = pts[Math.min(pts.length - 1, i + 1)], tx = b.d - a.d, ty = b.y - a.y, m = Math.hypot(tx, ty) || 1; pts[i].tx = tx / m; pts[i].ty = ty / m; pts[i].nx = ty / m; pts[i].ny = -tx / m; }   // n points up (out of the plate)
+  return { pts, length: L, sTrench, sRim, sVolc: sTrench + (D_VOLC - D_TRENCH) / Math.cos(SLAB_ANG) };
+})();
+function sample(s) { s = clamp(s, 0, PATH.length); const f = s / DS, i = Math.min(PATH.pts.length - 2, Math.floor(f)), t = f - i, a = PATH.pts[i], b = PATH.pts[i + 1]; return { d: lerp(a.d, b.d, t), y: lerp(a.y, b.y, t), nx: lerp(a.nx, b.nx, t), ny: lerp(a.ny, b.ny, t), tx: lerp(a.tx, b.tx, t), ty: lerp(a.ty, b.ty, t) }; }
+function posAt(s, side, lift) { const p = sample(s), d = p.d + p.nx * lift; return { x: CX + side * d, y: p.y + p.ny * lift }; }   // lift measured out of the center line, along the normal
+const CONDUIT_Y0 = sample(PATH.sVolc).y, CRATER_Y = topD(D_VOLC);
+// ---------------- tuning ----------------
+const T = { boatV: 250, boatVAdv: 150, lower: 185, raise: 225, hookTop: WATER - 18, rockR: 11, collR: 20, craneDx: 44, turnT: 0.3, turnHold: 0.18, minX: 125, maxX: 875,
+  // difficulty ramp: spreading speed, rock production and field flips all start slow and speed up linearly over rampT seconds
+  rampT: 240, speed0: 14, speedMax: 62, spawn0: 7.0, spawnMin: 1.2, speedMax2: 95, spawnMin2: 0.5,   // after rampT an "overdrive" phase keeps getting harder (another rampT seconds) so every game ends
+  flip0Min: 40, flip0Max: 60, flipMin: 5, flipMax: 11,
+  subEvery: 7.0, subHold: 1.3, subV: 62, magmaT: 1.5, warnT: 1.6,
+  // advanced mode: money and upgrades (each track has levels Low, Medium, High)
+  flipMul: 1, goldP: 0.15, priceMul: 1, tracks: { cap: true, crane: true, eng: true },   // student-settable: flip spacing (0 = no flips), share of nuggets, price multiplier, which upgrades exist
+  collide: true, boatGap: 88, idleW: 0.4, dragMin: 0.35,   // boats bump and push each other (see collide())
+  advanced: false, capClassic: 4, valNodule: 10, valGold: 30, capVals: [2, 4, 7, 12], craneMul: [1, 1.25, 1.55, 1.9], engMul: [1, 1.3, 1.65, 2.0], costCap: [60, 140, 280], costCrane: [60, 140, 280], costEng: [60, 140, 280], dockR: 16 };
+const TRACKS = ['cap', 'crane', 'eng'], LEVELNAMES = ['Base', 'Low', 'Medium', 'High'];
+class Game {
+  constructor(o) {
+    this.rng = mulberry32(o.seed || 1); this.target = o.target || 15; this.t = 0; this.state = 'play'; this.cfg = Object.assign({}, T, o.tune || {}); if (o.advanced) this.cfg.advanced = true;
+    this.pol = 1; this.nextFlip = this.cfg.flipMul > 0 ? this.rnd(this.cfg.flip0Min, this.cfg.flip0Max) * this.cfg.flipMul : Infinity; this.warn = false; this.flips = 0; this.bounds = [70, 160, 230, 330, 400, 500, 570];
+    this.rocks = []; this.spawnT = 1.0; this.nextSide = 1; this.subT = [2.5, 2.5]; this.piles = [[], []]; this.erupted = 0; this.nid = 1; this.events = []; this.shake = 0; this.spawned = 0;
+    this.players = o.players.map((p, i) => { const home = p.home || (i === 0 ? -1 : 1); return { id: i, name: p.name, color: p.color, home, x: home < 0 ? this.cfg.minX : this.cfg.maxX, vx: 0, hy: this.cfg.hookTop, carry: null, score: 0, got: 0, gold: 0, input: { l: 0, r: 0, u: 0, d: 0 }, lock: p.lock || 0, cash: 0, earned: 0, cargo: [], sold: 0, soldGold: 0, lv: { cap: 0, crane: 0, eng: 0 }, spent: 0, docked: false, fullT: -99, cs: 0, dPrev: 0, face: home < 0 ? 1 : -1, fs: home < 0 ? 1 : -1, turnAcc: 0 }; });
+  }
+  rnd(a, b) { return a + (b - a) * this.rng(); }
+  ramp() { return clamp(this.t / this.cfg.rampT, 0, 1); }
+  over() { return clamp((this.t - this.cfg.rampT) / this.cfg.rampT, 0, 1); }
+  speed() { return lerp(lerp(this.cfg.speed0, this.cfg.speedMax, this.ramp()), this.cfg.speedMax2, this.over()); }
+  spawnGap() { return lerp(lerp(this.cfg.spawn0, this.cfg.spawnMin, this.ramp()), this.cfg.spawnMin2, this.over()); }
+  flipGap() { const f = this.ramp(), c = this.cfg; return c.flipMul > 0 ? this.rnd(lerp(c.flip0Min, c.flipMin, f), lerp(c.flip0Max, c.flipMax, f)) * c.flipMul : Infinity; }
+  hookX(p) { return p.x - p.fs * this.cfg.craneDx; }   // the crane is at the REAR of the boat: opposite to the way it is facing
+  cap(p) { return this.cfg.advanced ? this.cfg.capVals[p.lv.cap] : this.cfg.capClassic; } craneMul(p) { return this.cfg.advanced ? this.cfg.craneMul[p.lv.crane] : 1; } engMul(p) { return this.cfg.advanced ? this.cfg.engMul[p.lv.eng] : 1; }   // ports and the cargo limit are in every game; upgrades and money are advanced only
+  portX(p) { return p.home < 0 ? this.cfg.minX : this.cfg.maxX; }
+  cost(p, tr) { const lv = p.lv[tr]; if (!this.cfg.tracks[tr] || lv >= 3) return null; return Math.max(5, Math.round(this.cfg['cost' + tr[0].toUpperCase() + tr.slice(1)][lv] * this.cfg.priceMul / 5) * 5); }   // null = maxed out, or turned off in the settings
+  buy(pi, tr) { const p = this.players[pi]; if (!p || !this.cfg.advanced || !p.docked || this.state !== 'play') return { ok: false, why: 'dock' }; const c = this.cost(p, tr); if (c === null) return { ok: false, why: this.cfg.tracks[tr] ? 'max' : 'off' }; if (p.cash < c) return { ok: false, why: 'cash' }; p.cash -= c; p.spent += c; p.lv[tr]++; this.events.push({ type: 'buy', p: pi, track: tr, level: p.lv[tr], cost: c }); return { ok: true }; }
+  rockXY(r) {
+    if (r.state === 'carried') return { x: r.wx, y: r.wy };
+    if (r.state === 'magma') { const x = CX + r.side * D_VOLC; return { x, y: lerp(CONDUIT_Y0, CRATER_Y, r.u) }; }
+    if (r.state === 'pile') { const i = this.piles[r.side > 0 ? 0 : 1].indexOf(r), p = posAt(PATH.sTrench, r.side, THICK / 2 + this.cfg.rockR * 0.8), row = Math.floor(i / 2), col = i % 2; return { x: p.x - r.side * (col ? 8 : -8) + r.jx, y: p.y - row * this.cfg.rockR * 1.5 }; }
+    return posAt(r.s, r.side, THICK / 2 + this.cfg.rockR * 0.8);
+  }
+  spawn() {
+    this.nextSide = this.rng() < 0.75 ? -this.nextSide : this.nextSide; const gold = this.rng() < this.cfg.goldP;
+    this.rocks.push({ id: this.nid++, side: this.nextSide, s: 0, state: 'pop', age: 0, kind: gold ? 'gold' : 'nodule', value: this.cfg.advanced ? (gold ? this.cfg.valGold : this.cfg.valNodule) : (gold ? 3 : 1), jx: (this.rng() - 0.5) * 6, rot: this.rng() * 6.28 }); this.spawned++; this.events.push({ type: 'spawn' });
+  }
+  // How hard a boat can push or hold its ground. Engine power counts (advanced mode), an idle boat barely resists, a boat dragging its crane cable through the water has poor leverage, and a boat serving its head-start wait is anchored.
+  boatW(p) { const c = this.cfg; if (p.lock > 0) return 1e6; const pw = c.advanced ? this.engMul(p) : 1, drag = lerp(1, c.dragMin, clamp((p.hy - c.hookTop) / 60, 0, 1)); return pw * drag * (p.mv !== 0 ? 1 : c.idleW); }
+  collide(dt) {
+    const c = this.cfg, G = c.boatGap, ps = this.players.slice().sort((a, b) => a.x - b.x); for (const p of ps) p.W = this.boatW(p);
+    for (let k = 0; k < ps.length - 1; k++) { const a = ps[k], b = ps[k + 1];       // touching and pushing into each other: they move together at the thrust-weighted speed
+      if (b.x - a.x <= G + 0.5 && a.vt - b.vt > 0) { const vc = (a.W * a.vt + b.W * b.vt) / (a.W + b.W); a.vx = b.vx = vc; const key = a.id + '-' + b.id; this.bumpT = this.bumpT || {}; if (a.vt - b.vt > 40 && this.t - (this.bumpT[key] || -9) > 0.8) { this.bumpT[key] = this.t; this.events.push({ type: 'bump', x: (a.x + b.x) / 2, a: a.id, b: b.id, pusher: a.W * Math.abs(a.vt) >= b.W * Math.abs(b.vt) ? a.id : b.id }); a.bumpAt = b.bumpAt = this.t; } } }
+    for (const p of ps) p.x += p.vx * dt;
+    for (let pass = 0; pass < 3; pass++) {                                    // boats cannot overlap: the lighter boat gives way, and the walls (ports) are solid
+      for (let k = 0; k < ps.length - 1; k++) { const a = ps[k], b = ps[k + 1], gap = b.x - a.x; if (gap < G) { const o = G - gap, wa = a.W, wb = b.W; a.x -= o * wb / (wa + wb); b.x += o * wa / (wa + wb); } }
+      for (const p of ps) p.x = clamp(p.x, c.minX, c.maxX);
+    }
+    for (let k = 0; k < ps.length - 1; k++) { const a = ps[k], b = ps[k + 1]; if (b.x - a.x < G - 0.01) { if (b.x >= c.maxX - 0.01) a.x = b.x - G; else b.x = a.x + G; } }
+  }
+  update(dt) {
+    if (this.state !== 'play') return; dt = Math.min(dt, 0.05); this.t += dt; const c = this.cfg;
+    if (!this.warn && this.t >= this.nextFlip - c.warnT) { this.warn = true; this.events.push({ type: 'warn' }); }
+    if (this.t >= this.nextFlip) { this.pol *= -1; this.warn = false; this.flips++; this.bounds.unshift(0); this.nextFlip = this.t + this.flipGap(); this.events.push({ type: 'flip', pol: this.pol }); }
+    const v = this.speed(); for (let i = 0; i < this.bounds.length; i++) this.bounds[i] += v * dt; while (this.bounds.length && this.bounds[this.bounds.length - 1] > PATH.length + 20) this.bounds.pop();
+    this.spawnT -= dt; if (this.spawnT <= 0) { this.spawn(); this.spawnT = this.spawnGap() * (0.8 + 0.4 * this.rng()); }
+    for (const r of this.rocks.slice()) {
+      if (r.state === 'pop') { r.age += dt; r.s = Math.min(26, r.age / 0.55 * 26); if (r.age >= 0.55) r.state = 'ride'; }
+      else if (r.state === 'ride') { r.s += v * dt; if (r.s >= PATH.sRim) r.state = 'drop'; }
+      else if (r.state === 'drop') { r.s += 175 * dt; if (r.s >= PATH.sTrench) { r.s = PATH.sTrench; r.state = 'pile'; r.pileT = this.t; this.piles[r.side > 0 ? 0 : 1].push(r); this.events.push({ type: 'trench' }); } }
+      else if (r.state === 'sub') { r.s += c.subV * dt; if (r.s >= PATH.sVolc) { r.state = 'magma'; r.u = 0; } }
+      else if (r.state === 'magma') { r.u += dt / c.magmaT; if (r.u >= 1) { this.erupted++; this.shake = 0.7; this.events.push({ type: 'erupt', side: r.side, n: this.erupted, x: CX + r.side * D_VOLC, y: CRATER_Y }); this.rocks.splice(this.rocks.indexOf(r), 1); if (this.erupted >= this.target) { this.state = 'over'; this.events.push({ type: 'over' }); } } }
+    }
+    for (let si = 0; si < 2; si++) { this.subT[si] -= dt; if (this.subT[si] <= 0) { const pile = this.piles[si], r = pile.find(q => this.t - q.pileT >= c.subHold); if (r) { pile.splice(pile.indexOf(r), 1); r.state = 'sub'; r.s = PATH.sTrench; this.subT[si] = c.subEvery; this.events.push({ type: 'sub' }); } else this.subT[si] = 0.2; } }
+    if (this.shake > 0) this.shake = Math.max(0, this.shake - dt);
+    const adv = c.advanced;
+    for (const p of this.players) {                                     // steering (every boat first)
+      if (p.lock > 0) { p.lock = Math.max(0, p.lock - dt); p.vx = 0; p.input.dTap = 0; p.input.uTap = 0; }
+      p.inp = p.lock > 0 ? { l: 0, r: 0, u: 0, d: 0 } : p.input; p.mv = (p.inp.r - p.inp.l) * this.pol;
+      { const want = p.mv > 0 ? 1 : p.mv < 0 ? -1 : 0;                        // the boat turns to face the way it is being driven (not while the bucket is in the water, and not for a tiny tap)
+        if (want !== 0 && want !== p.face && p.hy <= c.hookTop + 3 && !p.carry) { p.turnAcc += dt; if (p.turnAcc >= c.turnHold) { p.face = want; p.turnAcc = 0; } } else p.turnAcc = 0;
+        p.fs += clamp(p.face - p.fs, -2 * dt / c.turnT, 2 * dt / c.turnT); }
+      p.vt = p.mv * (adv ? c.boatVAdv * this.engMul(p) : c.boatV); p.vx += (p.vt - p.vx) * Math.min(1, dt * 9);
+    }
+    if (c.collide && this.players.length > 1) this.collide(dt); else for (const p of this.players) p.x = clamp(p.x + p.vx * dt, c.minX, c.maxX);
+    for (const p of this.players) {                                     // then the cranes, cargo and docking
+      const inp = p.inp, cm = this.craneMul(p);
+      const cx = this.hookX(p), maxHy = Math.max(c.hookTop, floorAt(cx) - 12);
+      // the crane is a drop-and-return cycle: pressing DOWN drops the bucket to the ground and brings it straight back up; pressing UP at any moment brings it up at once
+      // (a key tap is also latched in input.dTap / uTap by the page, so a press that starts and ends between two frames is never lost)
+      const tapD = !!p.input.dTap, tapU = !!p.input.uTap; p.input.dTap = 0; p.input.uTap = 0; const dEdge = (inp.d && !p.dPrev) || tapD; p.dPrev = inp.d ? 1 : 0;
+      if (p.carry) p.cs = 2; else if (p.cs === 0 && dEdge) p.cs = 1; else if (p.cs === 1 && (inp.u || tapU)) p.cs = 2;
+      if (p.cs === 1) { p.hy += c.lower * cm * dt; if (p.hy >= maxHy) { p.hy = maxHy; p.cs = 2; } }
+      else if (p.cs === 2) { p.hy -= c.raise * cm * (p.carry ? 1.1 : 1) * dt; if (p.hy <= c.hookTop) { p.hy = c.hookTop; p.cs = 0; } }
+      p.hy = clamp(p.hy, c.hookTop, maxHy);
+      const full = p.cargo.length >= this.cap(p);
+      if (!p.carry && p.hy > WATER + 8) for (const r of this.rocks) { if (r.state !== 'ride' && r.state !== 'pop') continue; const q = this.rockXY(r); if (Math.hypot(q.x - cx, q.y - p.hy) < c.collR + c.rockR * 0.8) { if (full) { if (this.t - p.fullT > 1.6) { p.fullT = this.t; this.events.push({ type: 'full', p: p.id, x: cx, y: p.hy }); } break; } r.state = 'carried'; r.by = p.id; p.carry = r; this.events.push({ type: 'grab', p: p.id, x: cx, y: p.hy }); break; } }
+      if (p.carry) { p.carry.wx = cx; p.carry.wy = p.hy + c.rockR * 0.5; if (p.hy <= c.hookTop + 0.5) { const r = p.carry; this.rocks.splice(this.rocks.indexOf(r), 1); p.carry = null; p.cargo.push({ kind: r.kind, value: r.value }); this.events.push({ type: 'stow', p: p.id, kind: r.kind, value: r.value, x: cx, n: p.cargo.length, cap: this.cap(p) }); } }
+      { const was = p.docked; p.docked = Math.abs(p.x - this.portX(p)) <= c.dockR && p.hy <= c.hookTop + 4 && !p.carry; if (p.docked && p.cargo.length) { let sum = 0, n = p.cargo.length, g = 0; p.cargo.forEach(r => { sum += r.value; if (r.kind === 'gold') g++; }); p.cargo = []; if (adv) { p.cash += sum; p.earned += sum; p.score = p.earned; } else p.score += sum; p.got += n; p.gold += g; this.events.push({ type: 'sell', p: p.id, n, gold: g, value: sum, x: p.x }); } if (p.docked && !was) this.events.push({ type: 'dock', p: p.id }); }
+    }
+  }
+}
+
+// ===================== Seafloor Salvage: the question bank (all 4-choice) =====================
+// Plain questions: { id, cat, text, opts, ans (index of the right option in opts), hint, why, fig? }.  Math questions are generated (gen) with fresh numbers each time.
+const BANK = [
+  // ---- spreading centers (ridge) ----
+  { id: 'r01', cat: 'ridge', fig: 'ridge', text: 'What is happening at a mid-ocean ridge?', opts: ['Two plates pull apart and new crust forms from rising magma', 'One plate sinks beneath another plate', 'Two plates slide past each other', 'Old crust melts and erupts as volcanoes'], ans: 0, hint: 'Look at the picture: the arrows point AWAY from the ridge.', why: 'Plates pull apart (diverge) and magma fills the gap to make new crust.' },
+  { id: 'r02', cat: 'ridge', fig: 'ridge', text: 'Compared with seafloor far from the ridge, the seafloor AT the ridge crest is...', opts: ['younger, hotter, and shallower', 'younger, colder, and deeper', 'older, colder, and deeper', 'older, hotter, and shallower'], ans: 0, hint: 'New crust forms at the ridge. Is brand-new crust old or young? Hot or cold?', why: 'New crust is young and hot, so it floats higher. As it ages it cools, gets denser, and sinks.' },
+  { id: 'r03', cat: 'ridge', text: 'Magma that erupts at a mid-ocean ridge cools into which rock?', opts: ['basalt', 'granite', 'limestone', 'marble'], ans: 0, hint: 'Oceanic crust is made of this dark, fine-grained volcanic rock.', why: 'Oceanic crust is basalt.' },
+  { id: 'r04', cat: 'ridge', text: 'What type of plate boundary is a mid-ocean ridge?', opts: ['divergent (plates move apart)', 'convergent (plates move together)', 'transform (plates slide past)', 'a boundary where nothing moves'], ans: 0, hint: 'Diverge means to move apart.', why: 'Ridges are divergent boundaries: the plates move apart.' },
+  { id: 'r05', cat: 'ridge', text: 'Where is the YOUNGEST ocean crust found?', opts: ['At the ridge crest', 'In the deepest trench', 'Next to the continents', 'Under volcanic islands'], ans: 0, hint: 'New crust is made where the plates pull apart.', why: 'New crust forms at the ridge, so the youngest crust is right there.' },
+  { id: 'r06', cat: 'ridge', fig: 'ridge', text: 'As oceanic crust moves away from a ridge, it...', opts: ['cools, becomes denser, and sinks deeper', 'heats up and rises higher', 'stays exactly the same', 'turns into continental crust'], ans: 0, hint: 'Look at the picture: the ocean gets deeper away from the ridge.', why: 'Cooling makes the crust denser, so it sinks lower and the ocean gets deeper.' },
+  { id: 'r07', cat: 'ridge', text: 'Hot-water vents called \u201cblack smokers\u201d are mostly found at...', opts: ['mid-ocean ridges', 'continental interiors', 'abyssal plains far from ridges', 'the edges of deserts'], ans: 0, hint: 'Seawater seeps down, gets heated by magma, and rushes back out where new crust forms.', why: 'Seawater is heated by magma near the ridge and erupts from vents.' },
+  { id: 'r08', cat: 'ridge', text: 'Which feature is a long underwater mountain chain where new crust forms?', opts: ['mid-ocean ridge', 'trench', 'abyssal plain', 'continental shelf'], ans: 0, hint: 'It is sometimes called a spreading center.', why: 'The mid-ocean ridge is the underwater mountain chain at a spreading center.' },
+  { id: 'r09', cat: 'ridge', text: 'Earthquakes at mid-ocean ridges are usually...', opts: ['shallow', 'extremely deep', 'the biggest on Earth', 'nonexistent'], ans: 0, hint: 'The crust at a ridge is thin and hot.', why: 'Ridge earthquakes are shallow because the hot crust is thin.' },
+  { id: 'r10', cat: 'ridge', fig: 'ridge', text: 'Which statement about the age of ocean crust is TRUE?', opts: ['The oldest crust is farthest from the ridge', 'The oldest crust is at the ridge crest', 'All ocean crust is the same age', 'Age has nothing to do with distance from the ridge'], ans: 0, hint: 'Crust is made at the ridge and then moves away.', why: 'Crust moves away from the ridge as it ages, so older crust is farther away.' },
+  { id: 'r11', cat: 'ridge', text: 'What fills the gap when two plates pull apart at a ridge?', opts: ['magma rising from the mantle', 'seawater', 'sand and mud', 'old crust falling back'], ans: 0, hint: 'It cools and hardens into new basalt.', why: 'Magma rises into the gap and hardens into new oceanic crust.' },
+  { id: 'r12', cat: 'ridge', text: 'The global mid-ocean ridge system is about how long?', opts: ['65,000 km', '650 km', '6,500 km', '650,000 km'], ans: 0, hint: 'It winds around the whole planet, like the seam on a baseball.', why: 'The ridge system is about 65,000 km long, the longest mountain chain on Earth.' },
+  // ---- magnetic stripes ----
+  { id: 's01', cat: 'stripes', text: 'Why does cooling basalt record Earth\u2019s magnetic field?', opts: ['Iron-rich minerals line up with the field and lock in place as the lava cools', 'Ocean currents add magnets to the lava', 'The salt in seawater is magnetic', 'Basalt glows whenever the field changes'], ans: 0, hint: 'Think of tiny compass needles frozen in place.', why: 'Iron-rich minerals act like tiny compasses and are locked in as the rock cools.' },
+  { id: 's02', cat: 'stripes', fig: 'stripes', text: 'How does the stripe pattern on one side of a ridge compare with the other side?', opts: ['It is a mirror image', 'It is completely different', 'Only one side has stripes', 'Every stripe is the same color'], ans: 0, hint: 'Look at the stripe picture: left side and right side.', why: 'New crust forms in the middle and moves away equally in both directions.' },
+  { id: 's03', cat: 'stripes', text: 'What does the symmetrical stripe pattern support?', opts: ['Seafloor spreading: new crust forms at the ridge and moves away on both sides', 'The Moon causes tides', 'Continents never move', 'Volcanoes only form at trenches'], ans: 0, hint: 'Which idea explains matching stripes on both sides of a ridge?', why: 'Matching stripes are strong evidence for seafloor spreading.' },
+  { id: 's04', cat: 'stripes', text: 'When Earth\u2019s magnetic field is NORMAL, a compass points...', opts: ['north', 'south', 'east', 'in a different direction every minute'], ans: 0, hint: 'Normal is how a compass works today.', why: 'In a normal field a compass needle points north.' },
+  { id: 's05', cat: 'stripes', text: 'When Earth\u2019s magnetic field is REVERSED, a compass points...', opts: ['south', 'north', 'straight up', 'nowhere at all'], ans: 0, hint: 'Reversed means the opposite of normal.', why: 'In a reversed field a compass needle would point south.' },
+  { id: 's06', cat: 'stripes', text: 'Which iron-rich mineral in basalt lines up with the magnetic field?', opts: ['magnetite', 'quartz', 'halite (salt)', 'calcite'], ans: 0, hint: 'Its name sounds like \u201cmagnet.\u201d', why: 'Magnetite is magnetic and records the field as lava cools.' },
+  { id: 's07', cat: 'stripes', text: 'How often does Earth\u2019s magnetic field flip?', opts: ['At irregular times, not on a schedule', 'Every year', 'Exactly every million years', 'It has never flipped'], ans: 0, hint: 'In the game the flips come at random times.', why: 'Flips happen at irregular, unpredictable times (hundreds of thousands of years apart or more).' },
+  { id: 's08', cat: 'stripes', fig: 'stripes', text: 'What causes a new stripe of the opposite color to start forming at the ridge?', opts: ['Earth\u2019s magnetic field flips', 'A trench opens nearby', 'The ocean gets colder', 'A volcano erupts on land'], ans: 0, hint: 'The stripe records the field at the moment the crust cooled.', why: 'When the field flips, new crust records the opposite direction, starting a new stripe.' },
+  { id: 's09', cat: 'stripes', text: 'A very WIDE stripe in the pattern means that, while it formed...', opts: ['the field stayed the same for a long time', 'the field flipped many times', 'no magma erupted', 'the crust was sinking'], ans: 0, hint: 'Wide means a lot of crust was made before the next flip.', why: 'A long stretch without a flip (or faster spreading) makes a wide stripe.' },
+  { id: 's10', cat: 'stripes', fig: 'stripes', text: 'Where is the YOUNGEST stripe?', opts: ['At the ridge, in the middle', 'At the far edges', 'Next to the trench', 'It is the same age everywhere'], ans: 0, hint: 'New crust forms at the ridge.', why: 'The newest crust, and so the youngest stripe, is at the ridge.' },
+  { id: 's11', cat: 'stripes', text: 'Two stripes are the same distance from the ridge, one on each side. They should have...', opts: ['the same age and the same polarity', 'different ages but the same polarity', 'the same age but opposite polarity', 'nothing in common'], ans: 0, hint: 'The pattern is a mirror image.', why: 'Crust the same distance away on each side formed at the same time, so it recorded the same field.' },
+  { id: 's12', cat: 'stripes', text: 'In this game, the dark seafloor stripes show...', opts: ['normal polarity (compass points north)', 'reversed polarity', 'the oldest crust', 'the location of trenches'], ans: 0, hint: 'Check the map legend at the bottom of the game.', why: 'Dark stripes are normal polarity; cream stripes are reversed.' },
+  // ---- subduction zones, trenches, volcanic arcs ----
+  { id: 'u01', cat: 'subduct', text: 'At a subduction zone, which plate sinks?', opts: ['The older, colder, denser oceanic plate', 'The newest, hottest oceanic plate', 'It is always the continental plate', 'Neither plate moves'], ans: 0, hint: 'Density decides which plate goes down.', why: 'Old, cold oceanic crust is dense and sinks into the mantle.' },
+  { id: 'u02', cat: 'subduct', fig: 'subduct', text: 'Why do volcanoes form above a subduction zone?', opts: ['Water from the sinking plate lowers the melting point of the mantle, making magma', 'Friction melts the whole plate instantly', 'The Sun heats the ocean floor', 'Magma squirts straight out of the trench'], ans: 0, hint: 'Look at the blue arrows in the picture.', why: 'Water lowers the melting point of the mantle, so magma forms and rises.' },
+  { id: 'u03', cat: 'subduct', text: 'What is the deep, narrow valley where a plate bends and sinks?', opts: ['trench', 'rift valley', 'abyssal plain', 'volcanic arc'], ans: 0, hint: 'It is where the plate bends down.', why: 'A trench marks where the sinking plate bends down.' },
+  { id: 'u04', cat: 'subduct', text: 'What kind of plate boundary is a subduction zone?', opts: ['convergent (plates move together)', 'divergent (plates move apart)', 'transform (plates slide past)', 'none of these'], ans: 0, hint: 'Converge means to come together.', why: 'Subduction happens where plates converge.' },
+  { id: 'u05', cat: 'subduct', fig: 'subduct', text: 'A curved chain of volcanoes above a subduction zone is called a...', opts: ['volcanic arc', 'mid-ocean ridge', 'rift valley', 'abyssal plain'], ans: 0, hint: 'Look at the picture: it sits above the sinking plate.', why: 'The chain of volcanoes is a volcanic arc.' },
+  { id: 'u06', cat: 'subduct', fig: 'subduct', text: 'Where do earthquakes happen in a subduction zone?', opts: ['Along the sinking plate, from shallow to very deep', 'Only near the ridge', 'Only on the surface of the volcano', 'Nowhere'], ans: 0, hint: 'Look for the red X marks in the picture.', why: 'Quakes occur all along the sinking plate, getting deeper as it goes down.' },
+  { id: 'u07', cat: 'subduct', text: 'The deepest places in the ocean, like the Mariana Trench, are found at...', opts: ['trenches', 'mid-ocean ridges', 'volcanic islands', 'the edges of beaches'], ans: 0, hint: 'It is where the plate bends down into the mantle.', why: 'Trenches are the deepest parts of the ocean (the Mariana Trench is almost 11 km deep).' },
+  { id: 'u08', cat: 'subduct', text: 'Why does old oceanic crust sink?', opts: ['It has cooled and become denser than the mantle beneath it', 'It gets lighter as it ages', 'It is pulled down by the Moon', 'It is heavier than the mantle because it is thicker than the continents'], ans: 0, hint: 'Think about what cooling does to density.', why: 'As it cools, the crust becomes denser than the mantle and sinks.' },
+  { id: 'u09', cat: 'subduct', text: 'The \u201cRing of Fire\u201d around the Pacific Ocean is mostly made of...', opts: ['subduction zones with volcanoes and earthquakes', 'mid-ocean ridges', 'deserts', 'glaciers'], ans: 0, hint: 'It has trenches, volcanic arcs, and many earthquakes.', why: 'The Ring of Fire is a belt of subduction zones around the Pacific.' },
+  { id: 'u10', cat: 'subduct', text: 'What happens to oceanic crust after it subducts?', opts: ['It is recycled into the mantle', 'It piles up forever at the trench', 'It rises back to the ridge', 'It becomes the Moon'], ans: 0, hint: 'The ocean floor is not permanent: it is made at ridges and destroyed at trenches.', why: 'The sinking plate is recycled into the mantle.' },
+  { id: 'u11', cat: 'subduct', text: 'Japan and the Aleutian Islands are examples of...', opts: ['volcanic island arcs', 'mid-ocean ridges', 'abyssal plains', 'rift valleys'], ans: 0, hint: 'They sit above subduction zones.', why: 'They are island arcs built by magma rising above sinking plates.' },
+  { id: 'u12', cat: 'subduct', text: 'Which set of features would you expect near a subduction zone?', opts: ['a trench, a volcanic arc, and deep earthquakes', 'a ridge, new crust, and shallow quakes only', 'stripes, a rift, and hot vents', 'a plain with no volcanoes or quakes'], ans: 0, hint: 'Think of the whole picture of one plate sinking under another.', why: 'Subduction zones have a trench, a volcanic arc, and earthquakes along the sinking plate.' },
+  // ---- math (numbers change every time).  1 cm per year = 10 km per million years ----
+  { id: 'm01', cat: 'math', gen: g => { const r = g.pick([2, 3, 4, 5, 6, 8]), t = g.pick([1, 2, 3, 4, 5]), a = r * t * 10; return { text: 'The seafloor moves away from a ridge at <b>' + r + ' cm per year</b>. How many <b>kilometers</b> has it moved after <b>' + t + ' million years</b>?', correct: a + ' km', wrong: [a * 10 + ' km', a / 10 + ' km', (r + t) * 10 + ' km'], hint: '1 cm per year = 10 km per million years. Multiply by the number of million years.', why: r + ' cm/yr = ' + r * 10 + ' km per million years, and ' + r * 10 + ' \u00d7 ' + t + ' = ' + a + ' km.' }; } },
+  { id: 'm02', cat: 'math', gen: g => { const r = g.pick([2, 3, 4, 5, 6, 8]), t = g.pick([2, 3, 4, 5]), d = r * t * 10; return { text: 'A stripe <b>' + d + ' km</b> from the ridge formed <b>' + t + ' million years ago</b>. What is the spreading rate in <b>cm per year</b>?', correct: r + ' cm/yr', wrong: [r * 10 + ' cm/yr', r / 10 + ' cm/yr', d / 10 + ' cm/yr'], hint: d + ' \u00f7 ' + t + ' = km per million years. 10 km per million years = 1 cm per year.', why: d + ' \u00f7 ' + t + ' = ' + d / t + ' km per million years = ' + r + ' cm per year.' }; } },
+  { id: 'm03', cat: 'math', gen: g => { const r = g.pick([2, 4, 5, 8]), my = g.pick([10, 15, 20, 25, 30, 40]), D = r * 10 * my; return { text: 'A plate moves toward a trench at <b>' + r + ' cm per year</b>. The trench is <b>' + D + ' km</b> away. How many <b>million years</b> until the plate reaches it?', correct: my + ' million years', wrong: [my * 10 + ' million years', my / 10 + ' million years', my + r + ' million years'], hint: r + ' cm per year = ' + r * 10 + ' km per million years. Then divide ' + D + ' by ' + r * 10 + '.', why: r + ' cm/yr = ' + r * 10 + ' km per million years, and ' + D + ' \u00f7 ' + r * 10 + ' = ' + my + ' million years.' }; } },
+  { id: 'm04', cat: 'math', gen: g => { const r = g.pick([2, 3, 4, 5, 6]), my = g.pick([5, 10, 15, 20]), D = r * 10 * my; return { text: 'Seafloor spreads at <b>' + r + ' cm per year</b>. A rock is <b>' + D + ' km</b> from the ridge. About how old is that rock, in <b>millions of years</b>?', correct: my + ' million years', wrong: [my * 10 + ' million years', my / 10 + ' million years', my + r + ' million years'], hint: 'Age = distance \u00f7 speed. Use ' + r * 10 + ' km per million years.', why: D + ' \u00f7 ' + r * 10 + ' = ' + my + ' million years old.' }; } },
+  { id: 'm05', cat: 'math', gen: g => { const r = g.pick([2, 3, 4, 5, 6, 8, 10]), t = g.pick([10, 20, 30, 50]), a = r * 10 * t; return { text: 'A plate moves <b>' + r + ' cm per year</b>. How many <b>kilometers</b> will it move in <b>' + t + ' million years</b>?', correct: a.toLocaleString('en-US') + ' km', wrong: [(a * 10).toLocaleString('en-US') + ' km', (a / 10).toLocaleString('en-US') + ' km', (a / 2).toLocaleString('en-US') + ' km'], hint: r + ' cm per year = ' + r * 10 + ' km per million years.', why: r * 10 + ' km per million years \u00d7 ' + t + ' million years = ' + a.toLocaleString('en-US') + ' km.' }; } },
+  { id: 'm06', cat: 'math', gen: g => { const r = g.pick([3, 4, 5, 6, 8]), my = g.pick([2, 3, 4, 5, 6]), d = r * 10 * my; return { text: 'The first <b>reversed</b> (white) stripe is <b>' + d + ' km</b> from the ridge, and it formed <b>' + my + ' million years ago</b>. How fast is the seafloor spreading, in <b>cm per year</b>?', correct: r + ' cm/yr', wrong: [r * 10 + ' cm/yr', r / 10 + ' cm/yr', d / 100 + ' cm/yr'], hint: d + ' km \u00f7 ' + my + ' million years = ' + d / my + ' km per million years. 10 km per million years = 1 cm per year.', why: d / my + ' km per million years = ' + r + ' cm per year.' }; } },
+  { id: 'm07', cat: 'math', gen: g => { const r = g.pick([2, 3, 4, 5]), t = g.pick([2, 4, 6, 8]), a = r * t * 10; return { text: 'Both sides of a ridge spread at <b>' + r + ' cm per year</b>. After <b>' + t + ' million years</b>, how far apart (in <b>km</b>) are two rocks that formed together at the ridge, one on each side?', correct: a * 2 + ' km', wrong: [a + ' km', a * 20 + ' km', a / 2 + ' km'], hint: 'Each side moves ' + r * 10 + ' km per million years. There are two sides!', why: 'Each rock moved ' + a + ' km in opposite directions, so they are ' + a + ' + ' + a + ' = ' + a * 2 + ' km apart.' }; } },
+  { id: 'm08', cat: 'math', gen: g => { const D = g.pick([300, 500, 800, 1000, 1500]), r = g.pick([2, 4, 5, 10]), my = D / (r * 10); return { text: 'A trench is <b>' + D + ' km</b> from a ridge. The seafloor travels <b>' + r + ' cm per year</b>. How long will it take (in <b>million years</b>) to reach the trench?', correct: my + ' million years', wrong: [my * 10 + ' million years', my / 10 + ' million years', my + r + ' million years'], hint: r + ' cm per year = ' + r * 10 + ' km per million years.', why: D + ' \u00f7 ' + r * 10 + ' = ' + my + ' million years.' }; } }
+];
+const CATS = ['ridge', 'stripes', 'subduct', 'math'];
+// pick n questions at random; prefer ones this student has not seen (seen = array of ids), and mix up the topics.  rnd() must return a number in [0,1).
+function pickQuiz(n, rnd, seen) {
+  const shuffle = a => { a = a.slice(); for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  let pool = BANK.filter(q => !(seen || []).includes(q.id)); if (pool.length < n) pool = BANK.slice();
+  const out = []; let order = shuffle(pool);
+  while (out.length < n && order.length) { const used = out.map(q => q.cat), q = order.find(x => !used.includes(x.cat)) || order[0]; out.push(q); order = order.filter(x => x !== q); }
+  return shuffle(out).map(q => realize(q, rnd));
+}
+function realize(q, rnd) {
+  const g = { pick: a => a[Math.floor(rnd() * a.length)] };
+  let text = q.text, hint = q.hint, why = q.why, items;
+  if (q.gen) { const o = q.gen(g); text = o.text; hint = o.hint; why = o.why; const uniq = []; [o.correct].concat(o.wrong).forEach(x => { if (!uniq.includes(x)) uniq.push(x); }); items = uniq.map((t, i) => ({ t, ok: i === 0 })); }
+  else items = q.opts.map((t, i) => ({ t, ok: i === q.ans }));
+  for (let i = items.length - 1; i > 0; i--) { const j = Math.floor(rnd() * (i + 1)); [items[i], items[j]] = [items[j], items[i]]; }
+  return { id: q.id, cat: q.cat, fig: q.fig || null, text, hint, why, opts: items.map(x => x.t), ans: items.findIndex(x => x.ok) };
+}
+
+// ===================== old nautical-map rendering: parchment, ink outlines, colored-pencil washes and hatching =====================
+const INK = '#3a2a1c', HAND = '"Segoe Print","Bradley Hand","Chalkboard SE","Marker Felt","Comic Sans MS",cursive';
+const COL = { dark: '#2d3047', white: '#f8f0d2', paper: '#ead9a6', halo: 'rgba(240,226,180,.9)', red: '#a8432f', blue: '#3f7396', nodule: '#4a382a', gold: '#e9b52c', magma: '#d9431f' };
+const hsh = n => { const x = Math.sin(n * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); };
+const jit = (seed, i, amp) => (hsh(seed * 7.13 + i * 3.77) - 0.5) * 2 * amp;
+const rgba = (hex, a) => { const n = parseInt(hex.slice(1), 16); return 'rgba(' + (n >> 16) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + a + ')'; };
+function hpts(pts, seed, amp, closed) {
+  const out = [], n = pts.length, segs = closed ? n : n - 1;
+  for (let i = 0; i < segs; i++) { const a = pts[i], b = pts[(i + 1) % n], L = Math.hypot(b[0] - a[0], b[1] - a[1]), k = Math.max(1, Math.round(L / 16)); for (let j = 0; j < k; j++) { const t = j / k; out.push([a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t]); } }
+  if (!closed) out.push(pts[n - 1]); return out.map((p, i) => [p[0] + jit(seed, i * 2, amp), p[1] + jit(seed, i * 2 + 1, amp)]);
+}
+function trace(ctx, w, closed) { ctx.beginPath(); ctx.moveTo(w[0][0], w[0][1]); for (let i = 1; i < w.length; i++) { const p = w[i - 1], q = w[i]; ctx.quadraticCurveTo(p[0], p[1], (p[0] + q[0]) / 2, (p[1] + q[1]) / 2); } if (closed) ctx.closePath(); else ctx.lineTo(w[w.length - 1][0], w[w.length - 1][1]); }
+// colored-pencil hatching: broken diagonal strokes clipped to a jittered outline
+function pencilW(ctx, w, color, alpha, ang, step, lw, seed) {
+  let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const p of w) { if (p[0] < x0) x0 = p[0]; if (p[1] < y0) y0 = p[1]; if (p[0] > x1) x1 = p[0]; if (p[1] > y1) y1 = p[1]; }
+  const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2, R = Math.hypot(x1 - x0, y1 - y0) / 2 + 4; ctx.save(); trace(ctx, w, true); ctx.clip(); ctx.translate(cx, cy); ctx.rotate(ang); ctx.strokeStyle = color; ctx.globalAlpha = alpha; ctx.lineWidth = lw; ctx.lineCap = 'round'; ctx.beginPath(); let k = 0;
+  for (let y = -R; y < R; y += step) { let x = -R + jit(seed, k * 3 + 1, 8); const yy = y + jit(seed, k * 3 + 2, step * 0.2); k++; while (x < R) { const len = 16 + hsh(seed + k * 1.9) * 38; ctx.moveTo(x, yy + jit(seed, k * 7, 0.8)); ctx.lineTo(Math.min(R, x + len), yy + jit(seed, k * 11, 1.2)); x += len + 2 + hsh(seed + k * 2.3) * 6; k++; } }
+  ctx.stroke(); ctx.restore();
+}
+// sk: a sketched shape = pale wash + pencil hatching + wobbly ink outline.  o: { amp, lw (0 = no outline), h: [[color, alpha, angle, step, lineWidth], ...] }
+function sk(ctx, pts, fill, seed, o) { o = o || {}; const amp = o.amp == null ? 1.0 : o.amp, w = hpts(pts, seed, amp, true); trace(ctx, w, true); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (o.h) o.h.forEach((h, i) => pencilW(ctx, w, h[0], h[1], h[2], h[3], h[4] || 1.3, seed + i * 3.7)); if (o.lw !== 0) { trace(ctx, w, true); ctx.lineWidth = o.lw || 3; ctx.strokeStyle = INK; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.stroke(); } }
+const hshape = (ctx, pts, fill, seed, amp, lw, closed) => { closed = closed !== false; const w = hpts(pts, seed, amp, closed); trace(ctx, w, closed); if (fill) { ctx.fillStyle = fill; ctx.fill(); } if (lw) { ctx.lineWidth = lw; ctx.strokeStyle = INK; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.stroke(); } };
+function hline(ctx, a, b, seed, amp, lw, color) { const w = hpts([a, b], seed, amp, false); trace(ctx, w, false); ctx.lineWidth = lw || 3; ctx.strokeStyle = color || INK; ctx.lineCap = 'round'; ctx.stroke(); }
+function harrow(ctx, a, ctrl, b, seed, lw, color) { ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.quadraticCurveTo(ctrl[0], ctrl[1], b[0], b[1]); ctx.lineWidth = lw || 3; ctx.strokeStyle = color || INK; ctx.lineCap = 'round'; ctx.stroke(); const ang = Math.atan2(b[1] - ctrl[1], b[0] - ctrl[0]), L = 10; ctx.beginPath(); ctx.moveTo(b[0], b[1]); ctx.lineTo(b[0] - L * Math.cos(ang - 0.5), b[1] - L * Math.sin(ang - 0.5)); ctx.moveTo(b[0], b[1]); ctx.lineTo(b[0] - L * Math.cos(ang + 0.5), b[1] - L * Math.sin(ang + 0.5)); ctx.stroke(); }
+function htext(ctx, s, x, y, size, color, align, halo, weight) { ctx.font = (weight || 'bold') + ' ' + size + 'px ' + HAND; ctx.textAlign = align || 'left'; ctx.textBaseline = 'middle'; if (halo !== false) { ctx.lineJoin = 'round'; ctx.lineWidth = Math.max(4, size / 3.2); ctx.strokeStyle = halo || COL.halo; ctx.strokeText(s, x, y); } ctx.fillStyle = color || INK; ctx.fillText(s, x, y); }
+function paper(ctx, W, H, seed) {
+  let g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.2, W / 2, H / 2, Math.max(W, H) * 0.75); g.addColorStop(0, '#f1e4b6'); g.addColorStop(1, '#dac388'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); ctx.lineCap = 'round'; ctx.lineWidth = 1;
+  for (let i = 0, n = Math.round(W * H / 380); i < n; i++) { const x = hsh(seed + i * 1.3) * W, y = hsh(seed + i * 2.7) * H, a = hsh(seed + i * 4.1) * 6.283, l = 3 + hsh(seed + i * 5.9) * 9; ctx.strokeStyle = hsh(seed + i * 8.3) > 0.5 ? 'rgba(120,85,35,.07)' : 'rgba(255,250,225,.2)'; ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); ctx.stroke(); }
+  for (let i = 0; i < 7; i++) { const x = hsh(seed + i * 9.1) * W, y = hsh(seed + i * 3.3) * H, r = 40 + hsh(seed + i * 6.7) * 90, sg = ctx.createRadialGradient(x, y, 0, x, y, r); sg.addColorStop(0, 'rgba(140,95,40,.08)'); sg.addColorStop(1, 'rgba(140,95,40,0)'); ctx.fillStyle = sg; ctx.fillRect(x - r, y - r, r * 2, r * 2); }
+  g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.42, W / 2, H / 2, Math.max(W, H) * 0.72); g.addColorStop(0, 'rgba(110,75,30,0)'); g.addColorStop(1, 'rgba(110,75,30,.3)'); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+}
+const profilePts = (d0, d1, side, step) => { const out = []; for (let d = d0; d <= d1 + 1e-6; d += step) out.push([CX + side * d, topD(d)]); return out; };
+const slabLine = (side, offset) => PATH.pts.filter(p => p.s >= PATH.sTrench).map(p => [CX + side * (p.d + p.nx * offset), p.y + p.ny * offset]);
+const HUDH = 122, OFF = HUDH - 60, GHT = GH + OFF;   // an information strip above the sea: the compass and all the boxes live there, clear of the boats
+const ROSE = { x: 500, y: 68, R: 46 };
+function rosePoint(ctx, cx, cy, ang, len, wid, seed, north) { const tip = [cx + Math.sin(ang) * len, cy - Math.cos(ang) * len], bx = cx + Math.sin(ang) * len * 0.24, by = cy - Math.cos(ang) * len * 0.24, px = Math.cos(ang) * wid, py = Math.sin(ang) * wid; sk(ctx, [[cx, cy], tip, [bx - px, by - py]], north ? 'rgba(168,67,47,.9)' : 'rgba(58,42,28,.82)', seed, { amp: 0.3, lw: 1.5 }); sk(ctx, [[cx, cy], tip, [bx + px, by + py]], 'rgba(248,240,210,.97)', seed + 1, { amp: 0.3, lw: 1.5 }); }
+function drawRose(ctx, cx, cy, R) {
+  ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fillStyle = 'rgba(248,240,210,.6)'; ctx.fill(); ctx.lineWidth = 2.8; ctx.strokeStyle = INK; ctx.stroke(); ctx.beginPath(); ctx.arc(cx, cy, R * 0.78, 0, 7); ctx.lineWidth = 1.5; ctx.stroke();
+  for (let i = 0; i < 72; i++) { const a = i * 5 * Math.PI / 180, long = i % 3 === 0, r0 = R * (long ? 0.8 : 0.86); ctx.beginPath(); ctx.moveTo(cx + Math.sin(a) * r0, cy - Math.cos(a) * r0); ctx.lineTo(cx + Math.sin(a) * R * 0.98, cy - Math.cos(a) * R * 0.98); ctx.lineWidth = long ? 1.4 : 0.9; ctx.strokeStyle = INK; ctx.stroke(); }
+  for (let k = 1; k < 16; k += 2) rosePoint(ctx, cx, cy, k * 22.5 * Math.PI / 180, R * 0.58, R * 0.07, 200 + k, false);
+  for (const k of [1, 3, 5, 7]) rosePoint(ctx, cx, cy, k * 45 * Math.PI / 180, R * 0.74, R * 0.1, 220 + k, false);
+  rosePoint(ctx, cx, cy, Math.PI, R * 0.74, R * 0.13, 241, false); rosePoint(ctx, cx, cy, Math.PI / 2, R * 0.74, R * 0.13, 242, false); rosePoint(ctx, cx, cy, -Math.PI / 2, R * 0.74, R * 0.13, 243, false); rosePoint(ctx, cx, cy, 0, R * 0.78, R * 0.14, 244, true);
+  ctx.beginPath(); ctx.arc(cx, cy, R * 0.07, 0, 7); ctx.fillStyle = INK; ctx.fill();
+  const ly = cy - R * 0.84; hshape(ctx, [[cx, ly - 9], [cx + 4, ly - 3], [cx + 9, ly - 6], [cx + 6, ly + 2], [cx, ly + 4], [cx - 6, ly + 2], [cx - 9, ly - 6], [cx - 4, ly - 3]], 'rgba(168,67,47,.85)', 245, 0.2, 1.4);
+  htext(ctx, 'N', cx, cy - R - 10, 16, '#a8432f', 'center'); htext(ctx, 'E', cx + R + 9, cy, 13, INK, 'center'); htext(ctx, 'W', cx - R - 10, cy, 13, INK, 'center');
+}
+function drawNeedle(ctx, cx, cy, R, ang) { ctx.save(); ctx.translate(cx, cy); ctx.rotate(ang); sk(ctx, [[0, -R * 0.96], [5, -R * 0.1], [-5, -R * 0.1]], '#c0392b', 301, { amp: 0.2, lw: 1.8 }); sk(ctx, [[0, R * 0.96], [5, R * 0.1], [-5, R * 0.1]], '#fbf6e2', 302, { amp: 0.2, lw: 1.8 }); ctx.beginPath(); ctx.arc(0, 0, 4.4, 0, 7); ctx.fillStyle = '#f1e4b6'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = INK; ctx.stroke(); ctx.restore(); }
+// ---------- static background (drawn once) ----------
+function makeBackground(makeCanvas, scale, noLabels, leg) {
+  leg = Object.assign({ nod: '1 point', gold: '3 points' }, leg || {});
+  const off = noLabels ? 0 : OFF, H = GH + off, cv = makeCanvas(Math.round(GW * scale), Math.round(H * scale)); cv.width = Math.round(GW * scale); cv.height = Math.round(H * scale); cv.__off = off; const ctx = cv.getContext('2d'); ctx.scale(scale, scale);
+  paper(ctx, GW, H, 7); ctx.save(); ctx.translate(0, off);
+  // water: blue wash, horizontal wavy "water lining", and diagonal pencil
+  const wp = [[0, WATER], [GW, WATER]]; for (let x = GW; x >= 0; x -= 5) wp.push([x, Math.max(WATER, floorAt(x))]); const ww = hpts(wp, 3, 0.9, true);
+  ctx.save(); trace(ctx, ww, true); ctx.clip(); let g = ctx.createLinearGradient(0, WATER, 0, 400); g.addColorStop(0, 'rgba(120,175,205,.34)'); g.addColorStop(1, 'rgba(60,115,150,.62)'); ctx.fillStyle = g; ctx.fillRect(0, WATER, GW, 400);
+  for (let y = WATER + 9, r = 0; y < 400; y += 10 + r % 3, r++) { ctx.beginPath(); let up = false; for (let x = 0; x <= GW; x += 8) { const yy = y + Math.sin(x * 0.06 + r * 1.7) * 1.6 + jit(r, x, 0.4); if (hsh(r * 31 + x * 0.173) < 0.07) { up = false; continue; } if (!up) { ctx.moveTo(x, yy); up = true; } else ctx.lineTo(x, yy); } ctx.strokeStyle = 'rgba(48,95,128,' + (0.5 - (y - WATER) / 700) + ')'; ctx.lineWidth = 1.1; ctx.stroke(); }
+  pencilW(ctx, [[0, WATER], [GW, WATER], [GW, 420], [0, 420]], '#2f6a94', 0.2, -0.5, 9, 1.3, 11); ctx.restore(); trace(ctx, ww, true); ctx.lineWidth = 3; ctx.strokeStyle = INK; ctx.stroke();
+  // the earth below the seafloor: orange wash with red-brown pencil
+  const earth = []; for (let x = 0; x <= GW; x += 5) earth.push([x, floorAt(x)]); earth.push([GW, GH], [0, GH]); sk(ctx, earth, 'rgba(232,150,74,.5)', 5, { amp: 0.8, lw: 0, h: [['#b0522a', 0.4, -0.62, 6, 1.4], ['#8a3a1a', 0.25, 0.7, 12, 1.2]] });
+  // overriding plates (island arcs) on both sides, with volcano shading
+  for (const side of [1, -1]) {
+    const top = profilePts(D_TRENCH, 500, side, 3), slab = slabLine(side, THICK / 2).reverse(); sk(ctx, top.concat([[CX + side * 500, slab[0][1]]], slab), 'rgba(201,160,104,.72)', 11 + side, { amp: 0.9, lw: 3.2, h: [['#7a5230', 0.45, side * 0.9, 6, 1.4], ['#5c3a1c', 0.28, -side * 0.5, 11, 1.2]] });
+    const isl = []; for (let d = 398; d <= 468; d += 2) if (topD(d) < WATER + 10) isl.push([CX + side * d, topD(d)]); if (isl.length > 2) { isl.push([isl[isl.length - 1][0], WATER + 8], [isl[0][0], WATER + 8]); sk(ctx, isl, 'rgba(110,160,80,.6)', 12, { amp: 0.7, lw: 2.6, h: [['#3f6b2a', 0.5, side * 0.8, 5, 1.4]] }); }
+    sk(ctx, [[CX + side * (D_VOLC - 9), CRATER_Y + 2], [CX + side * (D_VOLC + 9), CRATER_Y + 2], [CX + side * D_VOLC, CRATER_Y + 12]], 'rgba(70,45,30,.85)', 14, { amp: 0.4, lw: 2 });
+  }
+  // magma chamber and mantle flow arrows
+  sk(ctx, [[CX - 96, 352], [CX - 70, 318], [CX - 30, 308], [CX + 30, 308], [CX + 70, 318], [CX + 96, 352], [CX + 60, 382], [CX - 60, 382]], 'rgba(217,67,31,.8)', 31, { amp: 1.4, lw: 3.2, h: [['#7a1f0a', 0.4, 0.8, 6, 1.4]] }); sk(ctx, [[CX - 52, 346], [CX - 30, 328], [CX + 30, 328], [CX + 52, 346], [CX + 30, 364], [CX - 30, 364]], 'rgba(255,190,90,.8)', 32, { amp: 1.2, lw: 0 });
+  harrow(ctx, [CX - 20, 410], [CX - 60, 362], [CX - 108, 318], 1, 3.6, '#7a2a10'); harrow(ctx, [CX + 20, 410], [CX + 60, 362], [CX + 108, 318], 2, 3.6, '#7a2a10'); harrow(ctx, [CX - 120, 476], [CX - 250, 446], [CX - 350, 476], 3, 3.6, '#7a2a10'); harrow(ctx, [CX + 120, 476], [CX + 250, 446], [CX + 350, 476], 4, 3.6, '#7a2a10');
+  if (noLabels) return cv;
+  // ---- the sea scene's labels (still in world coordinates) ----
+  // map labels
+  htext(ctx, 'MID-OCEAN RIDGE', CX, 202, 19, INK, 'center'); htext(ctx, '(spreading center)', CX, 221, 14, INK, 'center'); harrow(ctx, [CX, 232], [CX + 14, 244], [CX + 2, 262], 1, 3, INK);
+  htext(ctx, 'MAGMA', CX, 345, 17, '#fff2d6', 'center', 'rgba(110,30,10,.9)');
+  for (const side of [1, -1]) { const x = d => CX + side * d;
+    htext(ctx, 'TRENCH', x(352), 294, 18, INK, 'center'); harrow(ctx, [x(341), 306], [x(328), 332], [x(319), 366], 5, 3, INK);
+    htext(ctx, 'VOLCANIC', x(440), 240, 15, INK, 'center'); htext(ctx, 'ARC', x(440), 257, 15, INK, 'center'); harrow(ctx, [x(440), 226], [x(441), 176], [x(436), 122], 6, 3, INK);
+    ctx.save(); ctx.translate(x(405), 462); ctx.rotate(side * SLAB_ANG * 0.95); htext(ctx, 'SINKING PLATE', 0, 0, 15, INK, 'center'); ctx.restore(); }
+  htext(ctx, 'MANTLE', 232, 506, 20, '#6b2f10', 'center'); htext(ctx, 'MANTLE', 768, 506, 20, '#6b2f10', 'center');
+  hshape(ctx, [[340, 486], [660, 486], [660, 530], [340, 530]], 'rgba(244,232,190,.92)', 45, 1.0, 2.4); hshape(ctx, [[350, 492], [368, 492], [368, 504], [350, 504]], COL.dark, 43, 0.5, 2); hshape(ctx, [[350, 512], [368, 512], [368, 524], [350, 524]], COL.white, 44, 0.5, 2); htext(ctx, 'stripe = normal field (compass north)', 376, 498, 12.5, INK, 'left', false); htext(ctx, 'stripe = reversed field (compass south)', 376, 518, 12.5, INK, 'left', false);
+  htext(ctx, 'not to scale', GW - 22, GH - 16, 12, 'rgba(58,42,28,.7)', 'right', false);
+  ctx.restore();
+  // ---- the information strip across the top (canvas coordinates): the compass, legend and all the boxes sit here, clear of the boats ----
+  ctx.save(); ctx.strokeStyle = 'rgba(58,42,28,.13)'; ctx.lineWidth = 1; for (let k = 0; k < 16; k++) { const a = k * Math.PI / 8; ctx.beginPath(); ctx.moveTo(ROSE.x, ROSE.y); ctx.lineTo(ROSE.x + Math.cos(a) * 1300, ROSE.y + Math.sin(a) * 1300); ctx.stroke(); } ctx.restore();
+  hline(ctx, [14, HUDH - 3], [GW - 14, HUDH - 3], 91, 1.2, 3, INK); hline(ctx, [14, HUDH + 1], [GW - 14, HUDH + 1], 92, 1.2, 1.4, INK);
+  drawRose(ctx, ROSE.x, ROSE.y, ROSE.R);
+  hshape(ctx, [[214, 38], [434, 38], [434, 108], [214, 108]], 'rgba(244,232,190,.9)', 41, 1.0, 2.4); drawRock(ctx, 236, 62, 10, 'nodule', 0.4, 5, 0); htext(ctx, 'manganese nodule = ' + leg.nod, 254, 62, 13.5, INK, 'left', false); drawRock(ctx, 236, 90, 10, 'gold', 0.3, 9, 0); htext(ctx, 'gold nugget (rare) = ' + leg.gold, 254, 90, 13.5, INK, 'left', false);
+  // map border
+  hshape(ctx, [[5, 5], [GW - 5, 5], [GW - 5, H - 5], [5, H - 5]], null, 77, 0.8, 3); hshape(ctx, [[12, 12], [GW - 12, 12], [GW - 12, H - 12], [12, H - 12]], null, 78, 0.6, 1.3);
+  return cv;
+}
+// ---------- dynamic parts ----------
+function stripPoly(s0, s1) { const a = [], b = [], H = THICK / 2, edge = (s, off) => { const p = sample(s); return [CX + (p.d + p.nx * off), p.y + p.ny * off]; }; a.push(edge(s0, H)); b.push(edge(s0, -H)); const i0 = Math.max(0, Math.floor(s0 / DS)), i1 = Math.min(PATH.pts.length - 1, Math.ceil(s1 / DS)); for (let i = i0 + 1; i < i1; i++) { const p = PATH.pts[i]; if (p.s <= s0 || p.s >= s1) continue; a.push([CX + p.d + p.nx * H, p.y + p.ny * H]); b.push([CX + p.d - p.nx * H, p.y - p.ny * H]); } a.push(edge(s1, H)); b.push(edge(s1, -H)); return a.concat(b.reverse()); }
+function drawStripes(ctx, G) {
+  const bs = G.bounds, n = bs.length; for (let i = 0; i <= n; i++) {
+    const lo = i === 0 ? 0 : bs[i - 1], hi = i === n ? PATH.length : bs[i]; if (hi - lo < 0.5 || lo >= PATH.length) continue; const pol = i % 2 === 0 ? G.pol : -G.pol, poly = stripPoly(lo, Math.min(hi, PATH.length));
+    ctx.beginPath(); poly.forEach((p, k) => k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.closePath(); ctx.fillStyle = pol > 0 ? COL.dark : COL.white; ctx.fill();
+    ctx.save(); ctx.clip(); let x0 = 1e9, y0 = 1e9, x1 = -1e9, y1 = -1e9; for (const p of poly) { if (p[0] < x0) x0 = p[0]; if (p[1] < y0) y0 = p[1]; if (p[0] > x1) x1 = p[0]; if (p[1] > y1) y1 = p[1]; }
+    ctx.strokeStyle = pol > 0 ? 'rgba(248,240,210,.22)' : 'rgba(120,85,45,.2)'; ctx.lineWidth = 1.1; ctx.beginPath(); for (let x = x0 - (y1 - y0); x < x1 + 4; x += 5) { ctx.moveTo(x, y1 + 2); ctx.lineTo(x + (y1 - y0) + 4, y0 - 2); } ctx.stroke(); ctx.restore();
+    if (hi - lo > 34 && hi < PATH.length - 20) { const m = sample((lo + Math.min(hi, PATH.length)) / 2), x = CX + m.d, y = m.y, dir = pol > 0 ? -1 : 1, tip = y + 7 * dir, tail = y - 7 * dir; ctx.strokeStyle = pol > 0 ? '#f8f0d2' : COL.dark; ctx.lineWidth = 2; ctx.lineCap = 'round'; ctx.beginPath(); ctx.moveTo(x, tail); ctx.lineTo(x, tip); ctx.moveTo(x - 3.5, tip - 4.5 * dir); ctx.lineTo(x, tip); ctx.lineTo(x + 3.5, tip - 4.5 * dir); ctx.stroke(); }
+    if (i > 0 && lo > 0.5 && lo < PATH.length) { const p = sample(lo), H = THICK / 2; hline(ctx, [CX + p.d + p.nx * H, p.y + p.ny * H], [CX + p.d - p.nx * H, p.y - p.ny * H], lo * 0.37, 0.8, 2, INK); }
+  }
+  const top = [], bot = []; for (const p of PATH.pts) { top.push([CX + p.d + p.nx * THICK / 2, p.y + p.ny * THICK / 2]); bot.push([CX + p.d - p.nx * THICK / 2, p.y - p.ny * THICK / 2]); }
+  for (const arr of [top, bot]) { ctx.beginPath(); arr.forEach((p, k) => k ? ctx.lineTo(p[0], p[1]) : ctx.moveTo(p[0], p[1])); ctx.lineWidth = 3; ctx.strokeStyle = INK; ctx.lineJoin = 'round'; ctx.stroke(); }
+}
+// the collectible rocks: dark knobby manganese nodules, and the occasional gold nugget
+function drawRock(ctx, x, y, r, kind, rot, seed, time) {
+  const gold = kind === 'gold', n = gold ? 8 : 11, pts = []; for (let i = 0; i < n; i++) { const a = rot + i / n * 6.283, rr = r * (gold ? 0.85 + 0.25 * hsh(seed + i * 1.7) : 0.78 + 0.4 * hsh(seed + i * 1.7)); pts.push([x + Math.cos(a) * rr, y + Math.sin(a) * rr]); }
+  if (gold) { sk(ctx, pts, 'rgba(240,190,50,.95)', seed, { amp: 0.7, lw: 2.4, h: [['#8a5a00', 0.5, 0.8, 4, 1.2]] }); ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1.8; ctx.beginPath(); ctx.arc(x - r * 0.15, y - r * 0.1, r * 0.5, 3.5, 4.7); ctx.stroke(); const k = (Math.sin(time * 6 + seed) + 1) / 2; ctx.strokeStyle = INK; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(x + r * 0.8, y - r * 1.3 - 3 * k); ctx.lineTo(x + r * 0.8, y - r * 1.3 + 6 + 3 * k); ctx.moveTo(x + r * 0.8 - 5 - 2 * k, y - r * 1.3 + 1.5); ctx.lineTo(x + r * 0.8 + 5 + 2 * k, y - r * 1.3 + 1.5); ctx.stroke(); }
+  else { sk(ctx, pts, 'rgba(74,56,42,.97)', seed, { amp: 0.8, lw: 2.3, h: [['#c9a878', 0.3, 0.9, 4, 1]] }); ctx.strokeStyle = 'rgba(236,214,170,.55)'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(x - r * 0.2, y - r * 0.15, r * 0.5, 3.6, 4.8); ctx.stroke(); ctx.strokeStyle = 'rgba(20,12,6,.65)'; ctx.beginPath(); ctx.arc(x + r * 0.3, y + r * 0.25, r * 0.22, 0, 6.3); ctx.moveTo(x - r * 0.45, y + r * 0.35); ctx.arc(x - r * 0.35, y + r * 0.35, r * 0.12, 0, 6.3); ctx.stroke(); }
+}
+function drawPort(ctx, G, p, time) {
+  const s = p.home, x = d => CX + s * d, y0 = WATER; ctx.save();
+  sk(ctx, [[x(338), y0 - 3], [x(418), y0 - 3], [x(418), y0 + 4], [x(338), y0 + 4]], 'rgba(176,132,76,.95)', 600 + s, { amp: 0.6, lw: 2.4, h: [['#4a2c10', 0.4, 0.1, 5, 1.2]] });
+  for (let d = 346; d <= 410; d += 16) hline(ctx, [x(d), y0 + 4], [x(d), y0 + 20], d, 0.4, 3, INK);
+  sk(ctx, [[x(418), y0 - 4], [x(418), y0 - 22], [x(434), y0 - 22], [x(434), y0 - 4]], 'rgba(238,224,180,.97)', 610 + s, { amp: 0.5, lw: 2.4 }); sk(ctx, [[x(414), y0 - 21], [x(426), y0 - 33], [x(438), y0 - 21]], 'rgba(168,67,47,.92)', 620 + s, { amp: 0.4, lw: 2.4, h: [['#3a1a10', 0.3, 0.8, 4, 1]] });
+  hline(ctx, [x(426), y0 - 33], [x(426), y0 - 54], 630 + s, 0.3, 2.4); const w = Math.sin(time * 4 + s) * 2; sk(ctx, [[x(426), y0 - 54], [x(426) + s * -1 * (16 + w), y0 - 49], [x(426), y0 - 44]], rgba(p.color, 0.95), 640 + s, { amp: 0.3, lw: 2 });
+  htext(ctx, 'PORT', x(426), y0 - 62, 11, INK, 'center'); ctx.restore();
+}
+function drawHold(ctx, G, p, y) {
+  const cap = G.cap(p), n = p.cargo.length, gap = cap > 8 ? 8 : 10, x0 = p.x - (cap - 1) * gap / 2; for (let i = 0; i < cap; i++) { ctx.beginPath(); ctx.arc(x0 + i * gap, y, 3.4, 0, 7); if (i < n) { ctx.fillStyle = p.cargo[i].kind === 'gold' ? '#e9b52c' : COL.nodule; ctx.fill(); } ctx.lineWidth = 1.8; ctx.strokeStyle = INK; ctx.stroke(); }
+}
+function drawBoat(ctx, G, p, time) {
+  const c = G.cfg, bob = Math.sin(time * 2 + p.id * 2) * 1.8, y = WATER - 9 + bob, fs = Math.abs(p.fs) < 0.06 ? (p.fs < 0 ? -0.06 : 0.06) : p.fs, tilt = clamp(p.vx / 250, -1, 1) * 0.06 + Math.sin(time * 1.7 + p.id) * 0.022 + (G.t - (p.bumpAt || -9) < 0.45 ? Math.sin(time * 36) * 0.07 * (1 - (G.t - p.bumpAt) / 0.45) : 0), sd = 50 + p.id * 9 + Math.floor(time * 7) % 3, S = 0.72;
+  ctx.save(); ctx.translate(p.x, y); ctx.rotate(tilt); ctx.scale(-S * fs, S);   // the sprite is drawn facing left (cabin at the front, crane at the rear); fs turns it smoothly to face the way the boat is travelling
+  sk(ctx, [[-70, -10], [-50, -4], [60, -4], [46, 24], [-48, 24], [-62, 6]], rgba(p.color, 0.82), sd, { amp: 1.1, lw: 4.2, h: [['#2a1a0c', 0.3, 0.9, 5, 1.4]] }); hline(ctx, [-52, 6], [52, 6], sd + 1, 0.8, 4, '#f8f0d2');
+  sk(ctx, [[-52, -4], [-52, -30], [-12, -30], [-12, -4]], 'rgba(248,240,210,.95)', sd + 2, { amp: 1.0, lw: 3.8, h: [['#8a6a3a', 0.25, 0.8, 5, 1.2]] }); ctx.beginPath(); ctx.arc(-32, -18, 6, 0, 7); ctx.fillStyle = 'rgba(120,175,205,.95)'; ctx.fill(); ctx.lineWidth = 3; ctx.strokeStyle = INK; ctx.stroke();
+  hline(ctx, [-30, -30], [-30, -48], sd + 3, 0.6, 3.6); sk(ctx, [[-30, -48], [-12, -43], [-30, -38]], rgba(p.color, 0.9), sd + 4, { amp: 0.6, lw: 3 });
+  sk(ctx, [[10, -4], [16, -40], [24, -40], [30, -4]], 'rgba(150,140,125,.9)', sd + 5, { amp: 0.8, lw: 3.4 }); hline(ctx, [20, -38], [60, -34], sd + 6, 0.7, 5.6, INK); ctx.beginPath(); ctx.arc(60, -34, 3.6, 0, 7); ctx.fillStyle = '#e9b52c'; ctx.fill(); ctx.lineWidth = 2.4; ctx.strokeStyle = INK; ctx.stroke(); ctx.restore();
+  const bx = p.x - fs * 60 * S * Math.cos(tilt), by = y - 34 * S + 60 * S * Math.sin(tilt) * 0.5, hook = G.hookX(p) + Math.sin(time * 2.4 + p.id * 1.7) * Math.min(4, (p.hy - c.hookTop) / 40);
+  ctx.beginPath(); ctx.moveTo(bx, by); ctx.lineTo(hook, p.hy - 10); ctx.lineWidth = 2.2; ctx.strokeStyle = INK; ctx.stroke(); drawCollector(ctx, hook, p.hy, p, sd, G);
+  htext(ctx, p.name, p.x - 2, y - 44 + bob * 0.3, 14, INK, 'center');
+  drawHold(ctx, G, p, y + 24); if (p.docked) htext(ctx, 'DOCKED', p.x, y - 58, 12, '#2f6b2a', 'center');
+  if (p.lock > 0) htext(ctx, 'starts in ' + Math.ceil(p.lock) + ' s', p.x, y - 64, 13, '#a82a1a', 'center');
+}
+function drawCollector(ctx, x, y, p, sd, G) {
+  ctx.save(); ctx.translate(x, y); ctx.scale(0.8, 0.8); ctx.beginPath(); ctx.arc(0, -13, 4, 0, 7); ctx.fillStyle = '#f8f0d2'; ctx.fill(); ctx.lineWidth = 2.8; ctx.strokeStyle = INK; ctx.stroke();
+  sk(ctx, [[-18, -4], [-8, -9], [8, -9], [18, -4], [15, 14], [4, 20], [-4, 20], [-15, 14]], rgba(p.color, 0.45), sd + 9, { amp: 0.7, lw: 3.4, h: [['#2a1a0c', 0.35, 0.9, 4, 1.2]] }); for (const k of [-9, 0, 9]) hline(ctx, [k, -7], [k * 0.7, 16], sd + 10 + k, 0.4, 2.2, INK); ctx.restore();
+  if (p.carry) drawRock(ctx, x, y + 3, G.cfg.rockR * 0.95, p.carry.kind, p.carry.rot, p.carry.id * 3.1, G.t);
+}
+function ribbon(ctx, x0, y0, w, h, seed) { const n = 12; sk(ctx, [[x0 - n, y0 + 2], [x0 + 6, y0 + h / 2], [x0 - n, y0 + h - 2], [x0 + 8, y0 + h - 2], [x0 + 8, y0 + h], [x0 + w - 8, y0 + h], [x0 + w - 8, y0 + h - 2], [x0 + w + n, y0 + h - 2], [x0 + w - 6, y0 + h / 2], [x0 + w + n, y0 + 2], [x0 + w - 8, y0 + 2], [x0 + w - 8, y0], [x0 + 8, y0], [x0 + 8, y0 + 2]], 'rgba(244,232,190,.97)', seed, { amp: 0.7, lw: 2.6 }); }
+function drawHUD(ctx, G, time) {   // canvas coordinates: everything here is in the strip above the sea
+  const x0 = 226, w = 192, y0 = 6; ribbon(ctx, x0, y0, w, 24, 71); const fr = clamp(G.erupted / G.target, 0, 1); if (fr > 0) { ctx.save(); ctx.beginPath(); ctx.rect(x0 + 8, y0 + 3, (w - 16) * fr, 18); ctx.clip(); hshape(ctx, [[x0 + 8, y0 + 3], [x0 + w - 8, y0 + 3], [x0 + w - 8, y0 + 21], [x0 + 8, y0 + 21]], 'rgba(217,67,31,.78)', 72, 0.5, 0); ctx.restore(); }
+  htext(ctx, 'LAVA  ' + G.erupted + ' / ' + G.target, x0 + w / 2, y0 + 13, 15, INK, 'center', 'rgba(244,232,190,.85)');
+  drawNeedle(ctx, ROSE.x, ROSE.y, ROSE.R, (G.pol > 0 ? 0 : Math.PI) + (G.warn ? Math.sin(time * 28) * 0.9 : 0));
+  hshape(ctx, [[566, 38], [786, 38], [786, 108], [566, 108]], 'rgba(244,232,190,.9)', 42, 1.0, 2.4);
+  htext(ctx, G.pol > 0 ? 'FIELD: NORMAL' : 'FIELD: REVERSED', 578, 62, 16, G.pol > 0 ? '#1d5d86' : '#b0301f', 'left', false); htext(ctx, G.pol > 0 ? 'left = left, right = right' : 'left and right are SWAPPED!', 578, 88, 13.5, G.pol > 0 ? INK : '#b0301f', 'left', false);
+  G.players.forEach((p, i) => { const left = i === 0, x = left ? 14 : GW - 14, al = left ? 'left' : 'right', xa = left ? 8 : GW - 200; sk(ctx, [[xa, 8], [xa + 192, 8], [xa + 192, 108], [xa, 108]], 'rgba(244,232,190,.93)', 75 + i, { amp: 0.9, lw: 2.8 }); ctx.beginPath(); ctx.arc(left ? 28 : GW - 28, 30, 9, 0, 7); ctx.fillStyle = rgba(p.color, 0.9); ctx.fill(); ctx.lineWidth = 2.2; ctx.strokeStyle = INK; ctx.stroke(); htext(ctx, p.name, left ? 46 : GW - 46, 30, 18, INK, al, false); htext(ctx, G.cfg.advanced ? '$' + p.cash : 'Score ' + p.score, x, 62, 20, INK, al, false); htext(ctx, 'Hold ' + p.cargo.length + '/' + G.cap(p) + (G.cfg.advanced ? '' : '   Saved ' + p.got), x, 88, 15, INK, al, false); });
+  if (G.warn) { const k = (Math.sin(time * 14) + 1) / 2; htext(ctx, 'MAGNETIC FIELD IS FLIPPING!', CX, OFF + 164, 23, '#a82a1a', 'center', 'rgba(250,236,170,' + (0.65 + 0.35 * k) + ')'); }
+  else if (G.t - (G.lastFlipT || -99) < 2.6) htext(ctx, G.pol > 0 ? 'Back to NORMAL: controls are normal' : 'FIELD REVERSED: left and right are swapped!', CX, OFF + 164, 22, G.pol > 0 ? '#1d5d86' : '#a82a1a', 'center', 'rgba(250,236,170,.92)');
+}
+function drawFrame(ctx, G, bg, time, noHud) {
+  const off = bg.__off || 0; ctx.drawImage(bg, 0, 0, GW, GH + off); const sh = G.shake > 0 ? G.shake * 4 : 0; ctx.save(); ctx.translate(0, off); if (sh) ctx.translate((Math.random() - 0.5) * sh, (Math.random() - 0.5) * sh);
+  for (let i = 0; i < 5; i++) { const t = (time * 0.35 + i * 0.2) % 1; ctx.beginPath(); ctx.arc(CX + Math.sin(i * 5 + time) * 8 + (i - 2) * 6, 262 - t * 110, 2.6 + (i % 3), 0, 7); ctx.strokeStyle = 'rgba(255,255,255,.85)'; ctx.lineWidth = 1.6; ctx.stroke(); ctx.strokeStyle = 'rgba(48,95,128,.5)'; ctx.lineWidth = 0.8; ctx.stroke(); }
+  for (const side of [1, -1]) { ctx.save(); if (side < 0) { ctx.translate(GW, 0); ctx.scale(-1, 1); } drawStripes(ctx, G); ctx.restore(); }
+  for (const side of [1, -1]) { const x = CX + side * D_VOLC, hot = G.rocks.some(r => r.state === 'magma' && r.side === side); ctx.strokeStyle = hot ? '#e0501a' : 'rgba(140,60,20,.7)'; ctx.lineWidth = hot ? 5 : 2.6; ctx.setLineDash([7, 6]); ctx.beginPath(); ctx.moveTo(x, CONDUIT_Y0); ctx.lineTo(x, CRATER_Y + 10); ctx.stroke(); ctx.setLineDash([]); }
+  for (const r of G.rocks) { if (r.state === 'carried') continue; const q = G.rockXY(r); if (r.state === 'magma') { ctx.beginPath(); ctx.arc(q.x, q.y, 9, 0, 7); ctx.fillStyle = '#e0501a'; ctx.fill(); ctx.lineWidth = 2.6; ctx.strokeStyle = INK; ctx.stroke(); ctx.beginPath(); ctx.arc(q.x - 2.5, q.y - 2.5, 3.4, 0, 7); ctx.fillStyle = '#ffd08a'; ctx.fill(); } else drawRock(ctx, q.x, q.y, G.cfg.rockR, r.kind, r.rot + (r.state === 'ride' || r.state === 'pop' ? -r.side * time * 0.9 : 0), r.id * 5.3, time); }
+  if (G.t < 32 && !noHud) { const a = clamp((32 - G.t) / 6, 0, 1); ctx.save(); ctx.globalAlpha = a; let doneN = false, doneG = false; for (const r of G.rocks) { if (r.state !== 'ride') continue; const q = G.rockXY(r); if (r.kind === 'nodule' && !doneN && q.x > 190 && q.x < 810) { htext(ctx, 'manganese nodule', q.x, q.y - 24, 14, INK, 'center'); doneN = true; } else if (r.kind === 'gold' && !doneG && q.x > 190 && q.x < 810) { htext(ctx, 'gold nugget!', q.x, q.y - 24, 14, '#8a5a00', 'center'); doneG = true; } } ctx.restore(); }
+  for (const f of G.fx || []) { const a = clamp(f.life / f.max, 0, 1); if (f.type === 'lava') { ctx.beginPath(); ctx.arc(f.x, f.y, f.r * (0.6 + 0.4 * a), 0, 7); ctx.fillStyle = a > 0.5 ? '#e0501a' : '#f2a63a'; ctx.fill(); ctx.lineWidth = 1.6; ctx.strokeStyle = INK; ctx.stroke(); } else if (f.type === 'splash') { ctx.beginPath(); ctx.arc(f.x, f.y, f.r, 0, 7); ctx.strokeStyle = 'rgba(248,240,210,' + a + ')'; ctx.lineWidth = 2.4; ctx.stroke(); } else if (f.type === 'text') htext(ctx, f.text, f.x, f.y, f.size || 20, f.color || INK, 'center'); }
+  for (const p of G.players) drawPort(ctx, G, p, time);
+  for (const p of G.players) drawBoat(ctx, G, p, time);
+  ctx.fillStyle = 'rgba(79,134,168,.34)'; ctx.beginPath(); ctx.moveTo(0, WATER + 1); for (let x = 0; x <= GW; x += 10) ctx.lineTo(x, WATER + 1 + Math.sin(x * 0.05 + time * 2.3) * 2); ctx.lineTo(GW, WATER + 14); ctx.lineTo(0, WATER + 14); ctx.closePath(); ctx.fill();
+  ctx.beginPath(); for (let x = 0; x <= GW; x += 10) { const y = WATER + Math.sin(x * 0.05 + time * 2.3) * 2; x ? ctx.lineTo(x, y) : ctx.moveTo(x, y); } ctx.lineWidth = 2.8; ctx.strokeStyle = '#2f5f82'; ctx.stroke();
+  ctx.restore(); if (!noHud) drawHUD(ctx, G, time);
+}
+
+// ===================== sketched figures for the review stations (old-chart style) =====================
+function figBase(cv, W, H, seed) { cv.width = W; cv.height = H; const ctx = cv.getContext('2d'); paper(ctx, W, H, seed); return ctx; }
+function waterBand(ctx, W, y0, y1, seed) { const pts = [[0, y0], [W, y0], [W, y1], [0, y1]]; sk(ctx, pts, 'rgba(110,170,200,.42)', seed, { amp: 0, lw: 0, h: [['#2f6a94', 0.25, -0.5, 8, 1.2]] }); ctx.strokeStyle = 'rgba(48,95,128,.4)'; ctx.lineWidth = 1; for (let y = y0 + 12; y < y1; y += 14) { ctx.beginPath(); for (let x = 0; x <= W; x += 8) { const yy = y + Math.sin(x * 0.07 + y) * 1.5; x ? ctx.lineTo(x, yy) : ctx.moveTo(x, yy); } ctx.stroke(); } hline(ctx, [0, y0], [W, y0], seed + 1, 1.2, 3, INK); }
+const EARTHW = ['rgba(232,150,74,.5)', [['#b0522a', 0.4, -0.62, 6, 1.4], ['#8a3a1a', 0.25, 0.7, 12, 1.2]]];
+function figRidge(cv) {
+  const W = 640, H = 300, ctx = figBase(cv, W, H, 31); waterBand(ctx, W, 26, 176, 2);
+  const top = [[0, 176], [90, 170], [200, 146], [270, 118], [300, 104], [320, 122], [340, 104], [370, 118], [440, 146], [550, 170], [640, 176]];
+  sk(ctx, top.concat([[640, H], [0, H]]), EARTHW[0], 3, { amp: 1, lw: 3.2, h: EARTHW[1] }); const crust = top.map(p => [p[0], p[1] + 26]).reverse(); sk(ctx, top.concat(crust), 'rgba(150,150,175,.75)', 4, { amp: 0.8, lw: 3, h: [['#3a3a55', 0.3, 0.8, 5, 1.2]] });
+  sk(ctx, [[230, 262], [260, 214], [320, 200], [380, 214], [410, 262], [350, 292], [290, 292]], 'rgba(217,67,31,.8)', 5, { amp: 1.3, lw: 3.2, h: [['#7a1f0a', 0.4, 0.8, 6, 1.4]] }); htext(ctx, 'magma', 320, 252, 16, '#fff2d6', 'center', 'rgba(110,30,10,.9)');
+  harrow(ctx, [300, 196], [286, 160], [306, 128], 1, 3.4, '#7a2a10'); harrow(ctx, [340, 196], [354, 160], [334, 128], 2, 3.4, '#7a2a10');
+  harrow(ctx, [282, 92], [210, 60], [120, 74], 3, 4.6, INK); harrow(ctx, [358, 92], [430, 60], [520, 74], 4, 4.6, INK); htext(ctx, 'plates move APART', 320, 38, 17, INK, 'center');
+  htext(ctx, 'MID-OCEAN RIDGE', 320, 66, 16, INK, 'center'); htext(ctx, 'younger, hotter, SHALLOWER', 320, 90, 12.5, INK, 'center'); htext(ctx, 'new crust (basalt)', 320, 142, 13, INK, 'center', 'rgba(244,232,190,.9)');
+  htext(ctx, 'older, colder,', 78, 128, 13, INK, 'center'); htext(ctx, 'DEEPER', 78, 146, 13, INK, 'center'); htext(ctx, 'older, colder,', 562, 128, 13, INK, 'center'); htext(ctx, 'DEEPER', 562, 146, 13, INK, 'center');
+  harrow(ctx, [40, 288], [200, 276], [286, 288], 5, 3.2, INK); htext(ctx, 'OLDER crust', 120, 270, 14, INK, 'center', 'rgba(244,232,190,.8)'); harrow(ctx, [600, 288], [440, 276], [354, 288], 6, 3.2, INK); htext(ctx, 'OLDER crust', 520, 270, 14, INK, 'center', 'rgba(244,232,190,.8)');
+}
+function figStripes(cv) {
+  const W = 640, H = 260, ctx = figBase(cv, W, H, 32); sk(ctx, [[0, 0], [W, 0], [W, H], [0, H]], 'rgba(110,170,200,.3)', 1, { amp: 0, lw: 0 });
+  const cx = 320, b = [14, 40, 60, 95, 118, 150, 176, 215, 250, 292, 320];
+  for (const side of [1, -1]) { let lo = 0, pol = 1; for (const hi of b) { const x0 = cx + side * Math.min(lo, hi), x1 = cx + side * Math.max(lo, hi); sk(ctx, [[x0, 62], [x1, 62], [x1, 214], [x0, 214]], pol > 0 ? COL.dark : COL.white, 7 + hi, { amp: 0.6, lw: 2.2, h: [[pol > 0 ? '#f8f0d2' : '#8a6a3a', pol > 0 ? 0.2 : 0.22, 0.7, 5, 1.1]] }); lo = hi; pol *= -1; } }
+  ctx.setLineDash([9, 6]); hline(ctx, [cx, 52], [cx, 224], 3, 0.6, 3.2, '#a8432f'); ctx.setLineDash([]); htext(ctx, 'RIDGE', cx, 44, 17, '#a8432f', 'center');
+  harrow(ctx, [cx - 70, 34], [cx - 120, 26], [cx - 190, 34], 4, 3.6, INK); harrow(ctx, [cx + 70, 34], [cx + 120, 26], [cx + 190, 34], 5, 3.6, INK); htext(ctx, 'seafloor spreads', cx - 130, 12, 13, INK, 'center', false); htext(ctx, 'seafloor spreads', cx + 130, 12, 13, INK, 'center', false);
+  sk(ctx, [[18, 226], [34, 226], [34, 240], [18, 240]], COL.dark, 9, { amp: 0.5, lw: 2 }); htext(ctx, 'normal polarity', 42, 233, 13, INK, 'left'); sk(ctx, [[170, 226], [186, 226], [186, 240], [170, 240]], COL.white, 10, { amp: 0.5, lw: 2 }); htext(ctx, 'reversed polarity', 194, 233, 13, INK, 'left');
+  htext(ctx, 'LEFT SIDE = mirror image of RIGHT SIDE', 470, 233, 13, '#1d3d66', 'center');
+}
+function figSubduct(cv) {
+  const W = 640, H = 300, ctx = figBase(cv, W, H, 33); waterBand(ctx, W, 24, 144, 2);
+  sk(ctx, [[0, 140], [W, 140], [W, H], [0, H]], EARTHW[0], 3, { amp: 1, lw: 3, h: EARTHW[1] });
+  sk(ctx, [[236, 160], [262, 120], [300, 96], [340, 50], [380, 96], [430, 108], [520, 130], [640, 150], [640, 300], [572, 300], [420, 232], [320, 190], [276, 172]], 'rgba(201,160,104,.78)', 4, { amp: 1, lw: 3.2, h: [['#7a5230', 0.45, 0.9, 6, 1.4], ['#5c3a1c', 0.28, -0.5, 11, 1.2]] });
+  sk(ctx, [[0, 140], [230, 158], [296, 184], [420, 244], [560, 300], [500, 300], [394, 252], [300, 206], [230, 184], [0, 164]], 'rgba(150,150,175,.78)', 5, { amp: 0.9, lw: 3, h: [['#3a3a55', 0.3, 0.8, 5, 1.2]] });
+  sk(ctx, [[322, 50], [358, 50], [340, 64]], 'rgba(70,45,30,.85)', 6, { amp: 0.4, lw: 2.2 }); ctx.setLineDash([8, 6]); hline(ctx, [340, 64], [340, 214], 7, 0.5, 3.6, '#c0501a'); ctx.setLineDash([]);
+  sk(ctx, [[316, 214], [340, 190], [372, 200], [388, 224], [352, 240], [320, 236]], 'rgba(217,67,31,.82)', 8, { amp: 1.2, lw: 3, h: [['#7a1f0a', 0.4, 0.8, 6, 1.3]] }); htext(ctx, 'magma', 352, 218, 13, '#fff2d6', 'center', 'rgba(110,30,10,.9)');
+  for (const [x, y] of [[300, 222], [360, 258], [420, 270], [468, 286]]) { hline(ctx, [x - 6, y - 6], [x + 6, y + 6], x, 0.4, 2.8, '#8a1c1c'); hline(ctx, [x + 6, y - 6], [x - 6, y + 6], x + 1, 0.4, 2.8, '#8a1c1c'); }
+  harrow(ctx, [270, 224], [286, 206], [300, 178], 9, 2.8, '#1d5d86'); harrow(ctx, [304, 248], [310, 214], [326, 192], 10, 2.8, '#1d5d86'); htext(ctx, 'water squeezed out', 236, 252, 13, '#1d5d86', 'center', 'rgba(244,232,190,.9)');
+  htext(ctx, 'TRENCH', 256, 118, 17, INK, 'center'); harrow(ctx, [256, 130], [256, 148], [258, 166], 11, 3.2, INK); htext(ctx, 'VOLCANIC ARC', 340, 28, 16, INK, 'center'); htext(ctx, 'SINKING OCEANIC PLATE', 118, 218, 13, INK, 'center', 'rgba(244,232,190,.85)'); htext(ctx, '(subducting)', 118, 236, 12, INK, 'center', 'rgba(244,232,190,.85)'); harrow(ctx, [118, 206], [118, 196], [120, 182], 12, 3.2, INK);
+  htext(ctx, 'earthquakes along the sinking plate', 470, 232, 12.5, '#8a1c1c', 'center', 'rgba(244,232,190,.9)'); harrow(ctx, [40, 84], [110, 80], [182, 118], 14, 3.8, INK); htext(ctx, 'plate moves toward the trench', 130, 60, 13, INK, 'center', 'rgba(244,232,190,.85)');
+}
+function figLabelScene(cv) {
+  const k = 0.64; cv.width = Math.round(GW * k); cv.height = Math.round(GH * k); const ctx = cv.getContext('2d'); const bg = makeBackground(() => document.createElement('canvas'), 1, true);
+  const G = new Game({ seed: 1, target: 99, players: [] }); ctx.save(); ctx.scale(k, k); drawFrame(ctx, G, bg, 0, true); ctx.restore(); ctx.scale(k, k);
+  const badge = (x, y, t) => { ctx.beginPath(); ctx.arc(x, y, 19, 0, 7); ctx.fillStyle = '#b5483a'; ctx.fill(); ctx.lineWidth = 3.4; ctx.strokeStyle = '#f8f0d2'; ctx.stroke(); ctx.lineWidth = 2.2; ctx.strokeStyle = INK; ctx.stroke(); htext(ctx, t, x, y + 1, 23, '#f8f0d2', 'center', false); };
+  badge(CX, 236, 'A'); badge(CX + 320, 372, 'B'); badge(CX + D_VOLC, 84, 'C'); badge(CX + 432, 452, 'D');
+}
+
+// ===================== Seafloor Salvage: quiz, head start, submission, game controller, and upgrade shop =====================
+(function () {
+'use strict';
+const $ = id => document.getElementById(id), esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const CFG0 = window.LAB_CONFIG || {}, GC = Object.assign({ rocksToEnd: 15, maxHead: 30, mode: 'classic', quizCountdown: 3, quizPause: 1.5 }, CFG0.game || {});
+const PCOL = ['#b5483a', '#3f7396'], LS = (() => { try { const k = '__t'; localStorage.setItem(k, '1'); localStorage.removeItem(k); return localStorage; } catch (e) { return null; } })();
+const lsGet = k => { try { return JSON.parse(LS.getItem(k)); } catch (e) { return null; } }, lsSet = (k, v) => { try { LS.setItem(k, JSON.stringify(v)); } catch (e) {} };
+const SND = { ctx: null, on: true,
+  init() { if (!this.ctx) { try { this.ctx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } },
+  tone(f, d, type, v, to, delay) { if (!this.on || !this.ctx) return; try { const c = this.ctx, o = c.createOscillator(), g = c.createGain(), t0 = c.currentTime + (delay || 0); o.type = type || 'sine'; o.frequency.setValueAtTime(f, t0); if (to) o.frequency.exponentialRampToValueAtTime(to, t0 + d); g.gain.setValueAtTime(v || 0.12, t0); g.gain.exponentialRampToValueAtTime(0.0001, t0 + d); o.connect(g); g.connect(c.destination); o.start(t0); o.stop(t0 + d + 0.02); } catch (e) {} },
+  boom() { if (!this.on || !this.ctx) return; this.tone(110, 0.5, 'sawtooth', 0.2, 40); this.tone(70, 0.6, 'square', 0.12, 30); } };
+const factor = a => a <= 1 ? 1 : a === 2 ? 0.5 : 0.25, NQ = 3;
+const FIGS = { ridge: figRidge, stripes: figStripes, subduct: figSubduct };
+const S = { n: 1, pl: [], target: 15, seed: 1, mode: GC.mode === 'advanced' ? 'adv' : 'classic', home: -1, lock: [0, 0], head: null, quiz: null };
+// ---------------- the settings menu (teacher sets the defaults in config.js; students can change them unless locked) ----------------
+const SET_DEF = { rocksToEnd: 15, rampSeconds: 240, bucket: 'normal', flips: 'normal', gold: 'normal', boatCollide: true, sound: true, capClassic: 4, upgrades: ['cap', 'crane', 'eng'], prices: 'normal', maxHead: 30 };
+const SPEC = [
+  { id: 'rocksToEnd', group: 'Length and difficulty', short: 'game length', label: 'Game length', help: 'The game ends after this many eruptions. Fewer = a shorter game.', type: 'int', min: 3, max: 60, step: 1, unit: 'eruptions' },
+  { id: 'rampSeconds', short: 'ramp', label: 'Seconds until full speed', help: 'The game starts slow and speeds up over this long. Longer = gentler.', type: 'int', min: 30, max: 600, step: 10, unit: 'seconds' },
+  { id: 'bucket', short: 'bucket size', label: 'Bucket size', help: 'A bigger bucket is easier to aim.', type: 'enum', opts: [['small', 'Small'], ['normal', 'Normal'], ['large', 'Large']] },
+  { id: 'flips', short: 'magnetic flips', label: 'Magnetic flips', help: 'Flips swap left and right.', type: 'enum', opts: [['off', 'Off'], ['rare', 'Rare'], ['normal', 'Normal'], ['often', 'Often']] },
+  { id: 'gold', short: 'gold nuggets', label: 'Gold nuggets', help: 'How many rocks are gold.', type: 'enum', opts: [['off', 'None'], ['rare', 'Rare'], ['normal', 'Normal'], ['common', 'Common']] },
+  { id: 'boatCollide', group: 'Boats and quiz', short: 'bumping', label: 'Boats bump and push each other', help: 'Two-player games only.', type: 'bool' },
+  { id: 'maxHead', short: 'head start cap', label: 'Biggest quiz head start', help: 'Two players: the faster quiz player\u2019s head start, up to this many seconds. 0 = no head start.', type: 'int', min: 0, max: 60, step: 5, unit: 'seconds' },
+  { id: 'capClassic', group: 'Classic mode', short: 'hold size', label: 'Cargo hold size', help: 'How many nodules your boat carries before it must sail home.', type: 'int', min: 1, max: 12, step: 1, unit: 'nodules' },
+  { id: 'upgrades', group: 'Advanced mode', short: 'upgrades', label: 'Upgrades you can buy', help: 'Turn off any upgrade you do not want.', type: 'set', opts: [['cap', 'Cargo hold'], ['crane', 'Crane speed'], ['eng', 'Engine speed']] },
+  { id: 'prices', short: 'upgrade prices', label: 'Upgrade prices', type: 'enum', opts: [['cheap', 'Cheap (half)'], ['normal', 'Normal'], ['pricey', 'Pricey (double)']] },
+  { id: 'sound', group: 'Sound', short: 'sound', label: 'Sound effects', type: 'bool' }];
+const SETKEY = 'essgame:settings:v1', MENU = GC.settingsMenu !== false, LOCK = new Set(Array.isArray(GC.lockedSettings) ? GC.lockedSettings : []);
+const sanitize = (sp, v) => { const d = SET_DEF[sp.id]; if (v === undefined || v === null) return d;
+  if (sp.type === 'int') { const n = Math.round(Number(v)); return isNaN(n) ? d : Math.max(sp.min, Math.min(sp.max, n)); }
+  if (sp.type === 'enum') return sp.opts.some(o => o[0] === v) ? v : d; if (sp.type === 'bool') return typeof v === 'boolean' ? v : d;
+  if (sp.type === 'set') return Array.isArray(v) ? sp.opts.map(o => o[0]).filter(k => v.indexOf(k) >= 0) : d; return d; };
+const same = (x, y) => JSON.stringify(x) === JSON.stringify(y), TD = {}, ST = {};
+SPEC.forEach(sp => { TD[sp.id] = sanitize(sp, GC[sp.id]); ST[sp.id] = TD[sp.id]; });
+if (MENU && LS) { const saved = lsGet(SETKEY); if (saved && typeof saved === 'object') SPEC.forEach(sp => { if (!LOCK.has(sp.id) && sp.id in saved) ST[sp.id] = sanitize(sp, saved[sp.id]); }); }
+const optLabel = (sp, v) => sp.type === 'bool' ? (v ? 'on' : 'off') : sp.type === 'int' ? v + (sp.unit ? ' ' + sp.unit : '') : sp.type === 'enum' ? sp.opts.find(o => o[0] === v)[1].toLowerCase() : v.length ? v.map(k => sp.opts.find(o => o[0] === k)[1].toLowerCase()).join(', ') : 'none';
+function saveSettings() { const o = {}; SPEC.forEach(sp => { if (!LOCK.has(sp.id) && !same(ST[sp.id], TD[sp.id])) o[sp.id] = ST[sp.id]; }); if (LS) lsSet(SETKEY, o); }
+function applySettings() {
+  S.target = ST.rocksToEnd; SND.on = ST.sound; $('gSound').textContent = 'Sound: ' + (ST.sound ? 'on' : 'off');
+  $('targetNote').textContent = 'The game ends when ' + S.target + ' manganese nodules have been subducted and erupted as lava (' + (ST.rocksToEnd === TD.rocksToEnd ? 'set by your teacher' : 'your setting') + ').';
+  const ch = SPEC.filter(sp => !same(ST[sp.id], TD[sp.id])), txt = ch.length ? 'Changed: ' + ch.map(sp => sp.short + ' ' + optLabel(sp, ST[sp.id])).join(', ') : 'Standard settings'; $('setSummary').textContent = txt; $('setSummary2').textContent = txt;
+}
+let setInGame = false, setPaused = false, setOpener = null;
+function setVal(id, v) { const sp = SPEC.find(q => q.id === id); if (!sp || !MENU || LOCK.has(id) || (setInGame && id !== 'sound')) return false; ST[id] = sanitize(sp, v); saveSettings(); applySettings(); return true; }
+const PRESETS = { relaxed: { rocksToEnd: 25, rampSeconds: 360, flips: 'rare', gold: 'common' }, frantic: { rocksToEnd: 10, rampSeconds: 120, flips: 'often', gold: 'rare' } };
+function applyPreset(name) { if (setInGame) return; const keys = ['rocksToEnd', 'rampSeconds', 'flips', 'gold']; keys.forEach(k => { if (LOCK.has(k)) return; ST[k] = name === 'normal' ? TD[k] : sanitize(SPEC.find(q => q.id === k), PRESETS[name][k]); }); saveSettings(); applySettings(); renderSettings(); }
+function renderSettings() {
+  const body = $('setBody'); let h = '', grp = '';
+  SPEC.forEach(sp => { if (sp.group && sp.group !== grp) { grp = sp.group; h += '<h3>' + grp + '</h3>'; } const locked = LOCK.has(sp.id), dis = locked || (setInGame && sp.id !== 'sound'), v = ST[sp.id], D = dis ? ' disabled' : '', id = 'st_' + sp.id; let ctl = '';
+    if (sp.type === 'int') ctl = '<input type="range" id="' + id + '" min="' + sp.min + '" max="' + sp.max + '" step="' + sp.step + '" value="' + v + '"' + D + '><output id="o_' + sp.id + '">' + v + ' ' + sp.unit + '</output>';
+    else if (sp.type === 'enum') ctl = '<select id="' + id + '"' + D + '>' + sp.opts.map(o => '<option value="' + o[0] + '"' + (o[0] === v ? ' selected' : '') + '>' + o[1] + '</option>').join('') + '</select>';
+    else if (sp.type === 'bool') ctl = '<input type="checkbox" id="' + id + '"' + (v ? ' checked' : '') + D + '>';
+    else ctl = sp.opts.map(o => '<label class="setl"><input type="checkbox" data-set="' + sp.id + '" value="' + o[0] + '"' + (v.indexOf(o[0]) >= 0 ? ' checked' : '') + D + '> ' + o[1] + '</label>').join('');
+    h += '<div class="srow' + (dis && !locked ? ' off' : '') + '" data-id="' + sp.id + '"><label class="nm" for="' + id + '">' + sp.label + (locked ? ' <span class="lockt">\uD83D\uDD12 set by your teacher</span>' : '') + (sp.help ? '<br><span class="small">' + sp.help + '</span>' : '') + '</label><span class="ctl">' + ctl + '</span></div>'; });
+  body.innerHTML = h;
+  body.querySelectorAll('input[type=range]').forEach(el => el.addEventListener('input', () => { const id = el.id.slice(3); setVal(id, +el.value); $('o_' + id).textContent = ST[id] + ' ' + SPEC.find(q => q.id === id).unit; }));
+  body.querySelectorAll('select').forEach(el => el.addEventListener('change', () => setVal(el.id.slice(3), el.value)));
+  body.querySelectorAll('input[type=checkbox]:not([data-set])').forEach(el => el.addEventListener('change', () => setVal(el.id.slice(3), el.checked)));
+  body.querySelectorAll('input[data-set]').forEach(el => el.addEventListener('change', () => setVal(el.dataset.set, [].filter.call(body.querySelectorAll('input[data-set="' + el.dataset.set + '"]'), c => c.checked).map(c => c.value))));
+  $('setNote').textContent = (setInGame ? 'The game is paused. Only the sound can change now; the other settings apply to your next game.' : 'These apply to your next game and are remembered on this computer.') + (LOCK.size ? ' Settings with a lock were set by your teacher.' : '');
+  document.querySelectorAll('.pre').forEach(b => { b.disabled = setInGame; }); $('setReset').disabled = setInGame;
+}
+function openSettings(inGame) { if (!MENU) return; setInGame = !!inGame; setOpener = document.activeElement; setPaused = false; if (inGame && phase === 'play') { pause(true); setPaused = true; } renderSettings(); $('setDlg').hidden = false; const mb = document.querySelector('.modalbox'); mb.scrollTop = 0; $('setTitle').setAttribute('tabindex', '-1'); $('setTitle').focus({ preventScroll: true }); }
+function closeSettings() { if ($('setDlg').hidden) return; $('setDlg').hidden = true; if (setPaused) { pause(false); setPaused = false; } setInGame = false; if (setOpener && setOpener.focus) setOpener.focus(); }
+$('setBtn').addEventListener('click', () => openSettings(false)); $('setBtn2').addEventListener('click', () => openSettings(false)); $('gSet').addEventListener('click', () => openSettings(true)); $('setDone').addEventListener('click', closeSettings);
+$('setDlg').addEventListener('click', e => { if (e.target === $('setDlg')) closeSettings(); }); document.addEventListener('keydown', e => { if (e.code === 'Escape' && !$('setDlg').hidden) { e.preventDefault(); e.stopPropagation(); closeSettings(); } }, true);
+document.querySelectorAll('.pre').forEach(b => b.addEventListener('click', () => applyPreset(b.dataset.p)));
+$('setReset').addEventListener('click', () => { SPEC.forEach(sp => { if (!LOCK.has(sp.id)) ST[sp.id] = TD[sp.id]; }); saveSettings(); applySettings(); renderSettings(); });
+if (!MENU) ['setBtn', 'setBtn2', 'gSet', 'setSummary', 'setSummary2'].forEach(k => { $(k).hidden = true; });
+const norm = s => String(s || '').trim().toLowerCase().replace(/\s+/g, ' '), keyOf = p => norm(p.name) + '|' + norm(p.period);
+function show(id) { for (const v of ['vSetup', 'vReview', 'vReady', 'vGame', 'vOver']) $(v).hidden = v !== id; document.body.classList.toggle('playing', id === 'vGame'); const n = { vSetup: 1, vReview: 2, vReady: 2, vGame: 3, vOver: 3 }[id]; [1, 2, 3].forEach(i => $('stp' + i).classList.toggle('on', i === n)); window.scrollTo(0, 0); }
+// ---------------- setup ----------------
+function setPlayers(n) { S.n = n; $('n1').className = 'btn ' + (n === 1 ? 'blue' : 'plain'); $('n2').className = 'btn ' + (n === 2 ? 'blue' : 'plain'); $('p2box').hidden = n === 1; $('homeBox').hidden = n !== 1; }
+function setMode(m) {
+  S.mode = m; $('md1').className = 'btn ' + (m === 'classic' ? 'blue' : 'plain'); $('md2').className = 'btn ' + (m === 'adv' ? 'blue' : 'plain'); $('homeBox').hidden = S.n !== 1;
+  $('modeNote').innerHTML = m === 'classic' ? 'Grab manganese nodules for <b>points</b>. Your boat has a <b>cargo hold</b> with a limit, and you only score when you <b>sail home to your port and unload</b>.' : 'Nodules are worth <b>dollars</b>. Your ship starts at a <b>home port</b> on one of the two islands. Fill your cargo hold, <b>sail home to sell</b>, and spend the money on <b>upgrades</b> for cargo, crane speed, and engine speed.';
+}
+$('n1').addEventListener('click', () => setPlayers(1)); $('n2').addEventListener('click', () => setPlayers(2)); $('md1').addEventListener('click', () => setMode('classic')); $('md2').addEventListener('click', () => setMode('adv')); $('homeSel').addEventListener('change', () => { S.home = +$('homeSel').value; });
+applySettings(); setMode(S.mode);
+$('goReview').addEventListener('click', () => {
+  const pl = []; for (let i = 0; i < S.n; i++) { const name = $('nm' + i).value.trim(), period = $('pd' + i).value.trim(); if (!name || !period) { $('setupMsg').textContent = 'Player ' + (i + 1) + ': type a name and a class period.'; return; } pl.push({ name, period, quiz: null, sub: null }); }
+  if (S.n === 2 && keyOf(pl[0]) === keyOf(pl[1])) { $('setupMsg').textContent = 'The two players need different names.'; return; }
+  $('setupMsg').textContent = ''; S.pl = pl; beginQuiz();
+});
+// ---------------- the warm-up quiz (3 random questions; two players answer at the same time) ----------------
+const QKEYS = [['KeyA', 'KeyS', 'KeyD', 'KeyF'], ['KeyJ', 'KeyK', 'KeyL', 'Semicolon']], QCAP = [['A', 'S', 'D', 'F'], ['J', 'K', 'L', ';']], QDIG = ['Digit1', 'Digit2', 'Digit3', 'Digit4'];
+const seenKey = p => 'essgame:seen:' + keyOf(p), seenOf = p => (LS && lsGet(seenKey(p))) || [];
+let qzTimer = 0, qzCountTimer = 0;
+function beginQuiz() {
+  show('vReview'); clearInterval(qzTimer); clearTimeout(qzCountTimer); const rnd = window.__rnd || Math.random, seen = [].concat.apply([], S.pl.map(seenOf)), qs = pickQuiz(NQ, rnd, seen);
+  S.quiz = { qs, running: false, pl: S.pl.map((p, i) => ({ i, idx: 0, att: 0, wrong: [], res: [], t0: 0, secs: null, finished: false, hold: false })) }; S.lock = [0, 0]; S.head = null; S.pl.forEach(p => { p.quiz = null; p.sub = null; });
+  $('qzIntroBox').hidden = false; $('qzCount').hidden = true; $('qzWrap').hidden = true; $('qzWrap').innerHTML = ''; $('qzDone').hidden = true;
+  $('qzIntro').innerHTML = S.n === 1 ? 'Answer 3 questions about seafloor spreading, magnetic stripes, and subduction. Wrong answers get crossed out, so keep trying. Your teacher sees how you did.' : 'Both players answer the <b>same 3 questions at the same time</b>, each on their own half of the screen. Wrong answers get crossed out, so keep trying. When you both finish, <b>the faster player earns a head start</b>: the other boat has to wait that many seconds at the start of the game (up to ' + ST.maxHead + ' seconds).'; if (S.n === 2 && ST.maxHead === 0) $('qzIntro').innerHTML = $('qzIntro').innerHTML.replace(/ When you both finish.*$/, ' Head starts are turned off in the settings, so you both start the game together.');
+  $('qzKeys').innerHTML = S.pl.map((p, i) => '<div class="box" style="margin:0"><b style="color:' + PCOL[i] + '">' + esc(p.name) + '</b>: press ' + QCAP[i].map(k => '<span class="kbd">' + k + '</span>').join(' ') + ' for answers 1 to 4' + (S.n === 1 ? ' (the number keys 1 to 4 and clicking also work)' : '') + '</div>').join('');
+}
+function startQuiz() {
+  const Z = S.quiz; if (!Z || Z.running || Z.counting) return; SND.init(); Z.counting = true; $('qzIntroBox').hidden = true; let n = Math.max(0, Math.round(GC.quizCountdown));
+  const step = () => { if (n <= 0) { $('qzCount').hidden = true; return runQuiz(); } $('qzCount').hidden = false; $('qzCountN').textContent = n; SND.tone(440, 0.1, 'square', 0.1); n--; qzCountTimer = setTimeout(step, 800); }; step();
+}
+function runQuiz() {
+  const Z = S.quiz; Z.running = true; Z.counting = false; const wrap = $('qzWrap'); wrap.hidden = false; wrap.className = 'qzwrap' + (S.n === 1 ? ' one' : ''); wrap.innerHTML = ''; SND.tone(880, 0.2, 'square', 0.12); const now = performance.now();
+  S.pl.forEach((p, i) => { const d = document.createElement('div'); d.className = 'box qz'; d.id = 'qz' + i; wrap.appendChild(d); Z.pl[i].t0 = now; renderQ(i); });
+  clearInterval(qzTimer); qzTimer = setInterval(() => { const t = performance.now(); Z.pl.forEach((P, i) => { const el = $('tm' + i); if (el && !P.finished) el.textContent = ((t - P.t0) / 1000).toFixed(1) + ' s'; }); }, 100);
+}
+function renderQ(i) {
+  const Z = S.quiz, P = Z.pl[i], q = Z.qs[P.idx], p = S.pl[i], box = $('qz' + i);
+  box.innerHTML = '<div class="qzh"><b style="color:' + PCOL[i] + '">' + esc(p.name) + '</b><span class="dots">' + Z.qs.map((_, k) => '<i class="' + (k < P.idx ? 'ok' : k === P.idx ? 'on' : '') + '"></i>').join('') + '</span><span class="tmr" id="tm' + i + '">' + ((performance.now() - P.t0) / 1000).toFixed(1) + ' s</span></div><div class="small">Question ' + (P.idx + 1) + ' of ' + NQ + '</div>' + (q.fig ? '<div class="qfig"></div>' : '') + '<p class="qtx">' + q.text + '</p><div class="opts" id="op' + i + '"></div><div class="fb" id="fb' + i + '"></div><div class="hint" id="hi' + i + '"></div>';
+  if (q.fig) { const cv = document.createElement('canvas'); FIGS[q.fig](cv); box.querySelector('.qfig').appendChild(cv); }
+  const op = $('op' + i); q.opts.forEach((t, k) => { const b = document.createElement('button'); b.type = 'button'; b.className = 'opt qopt'; b.dataset.k = k; b.innerHTML = '<span class="kbd">' + (S.n === 1 && false ? k + 1 : QCAP[i][k]) + '</span><span>' + t + '</span>'; b.addEventListener('click', () => answer(i, k)); op.appendChild(b); });
+}
+function answer(i, k) {
+  const Z = S.quiz; if (!Z || !Z.running) return; const P = Z.pl[i]; if (P.finished || P.hold) return; const q = Z.qs[P.idx]; if (k < 0 || k >= q.opts.length || P.wrong.indexOf(k) >= 0) return;
+  const btn = $('op' + i).children[k], fb = $('fb' + i), hint = $('hi' + i); P.att++;
+  if (k === q.ans) { P.hold = true; btn.classList.add('right'); [].forEach.call($('op' + i).children, b => { b.disabled = true; }); P.res.push({ id: q.id, text: q.text, answer: q.opts[q.ans], why: q.why, att: P.att }); fb.className = 'fb ok'; fb.innerHTML = '\u2713 ' + (P.att === 1 ? 'First try! ' : 'Correct! ') + q.why; hint.textContent = ''; SND.tone(660, 0.12, 'triangle', 0.14, 990); setTimeout(() => nextQ(i), 1000 * GC.quizPause * (P.att === 1 ? 1 : 1.25)); }
+  else { P.wrong.push(k); btn.classList.add('wrong'); btn.disabled = true; fb.className = 'fb bad'; fb.textContent = 'Not quite. Try again!'; if (P.att >= 2) hint.textContent = 'Hint: ' + q.hint; SND.tone(200, 0.2, 'sawtooth', 0.1); }
+}
+function nextQ(i) { const P = S.quiz.pl[i]; P.idx++; P.att = 0; P.wrong = []; P.hold = false; if (P.idx >= NQ) { P.finished = true; P.secs = (performance.now() - P.t0) / 1000; const box = $('qz' + i); box.innerHTML = '<div class="qzh"><b style="color:' + PCOL[i] + '">' + esc(S.pl[i].name) + '</b><span class="tmr">' + P.secs.toFixed(1) + ' s</span></div><p class="win" style="font-size:28px">\u2605 Finished!</p><p>' + (S.quiz.pl.every(x => x.finished) ? '' : 'Waiting for the other player\u2026') + '</p>'; SND.tone(880, 0.15, 'triangle', 0.14, 1320); if (S.quiz.pl.every(x => x.finished)) { S.quiz.pl.forEach((_, k) => { const w = $('qz' + k).querySelector('p:last-child'); if (w && /Waiting/.test(w.textContent)) w.textContent = ''; }); finishQuiz(); } } else renderQ(i); }
+function finishQuiz() {
+  const Z = S.quiz; clearInterval(qzTimer); Z.running = false;
+  S.pl.forEach((p, i) => { const P = Z.pl[i], first = P.res.filter(r => r.att === 1).length, att = P.res.reduce((s, r) => s + r.att, 0), score = +P.res.reduce((s, r) => s + factor(r.att), 0).toFixed(2); p.quiz = { sid: keyOf(p) + '|' + Date.now() + '|' + i, items: P.res.map(r => ({ id: r.id, label: r.id, attempts: r.att })), recap: P.res, first, att, score, max: NQ, secs: +P.secs.toFixed(2) }; if (LS) lsSet(seenKey(p), (seenOf(p).length >= BANK.length - NQ ? [] : seenOf(p)).concat(Z.qs.map(q => q.id))); });
+  S.head = null; S.lock = [0, 0];
+  if (S.n === 2) { const a = Z.pl[0].secs, b = Z.pl[1].secs, diff = Math.abs(a - b), fast = a <= b ? 0 : 1, head = diff >= 0.5 ? Math.min(ST.maxHead, Math.round(diff * 10) / 10) : 0; S.head = { fast, slow: 1 - fast, diff: +diff.toFixed(2), head, capped: diff > ST.maxHead && head > 0, off: ST.maxHead === 0 }; if (head > 0) S.lock[1 - fast] = head; }
+  const box = $('qzDone'); $('qzWrap').hidden = false; box.hidden = false;
+  let h = '<h2>\u2605 Quiz complete!</h2><table class="tbl"><tr><th>Player</th><th>Time</th><th>Right on the first try</th><th>Quiz score</th><th>Sent to your teacher</th></tr>' + S.pl.map((p, i) => '<tr><td><b style="color:' + PCOL[i] + '">' + esc(p.name) + '</b></td><td>' + p.quiz.secs.toFixed(1) + ' s</td><td>' + p.quiz.first + ' of ' + NQ + '</td><td>' + p.quiz.score + ' / ' + NQ + '</td><td class="stat" id="subMsg' + i + '">sending\u2026</td></tr>').join('') + '</table>';
+  if (S.n === 2) h += S.head.head > 0 ? '<p class="win" style="font-size:26px">' + esc(S.pl[S.head.fast].name) + ' was faster by ' + S.head.diff.toFixed(1) + ' s' + (S.head.capped ? ' (the head start is capped at ' + ST.maxHead + ' s)' : '') + '! ' + esc(S.pl[S.head.slow].name) + '\u2019s boat will wait <b>' + S.head.head.toFixed(1) + ' seconds</b> at the start of the game.</p>' : (S.head.off ? '<p class="win" style="font-size:26px">Head starts are turned off, so both boats start together!</p>' : '<p class="win" style="font-size:26px">Too close to call: no head start. Both boats start together!</p>');
+  h += '<details><summary><b>See the questions and answers</b></summary>' + S.pl.map((p, i) => '<h3 style="color:' + PCOL[i] + '">' + esc(p.name) + '</h3><ol>' + p.quiz.recap.map(r => '<li>' + r.text + '<br><b>Answer:</b> ' + esc(r.answer) + ' <span class="small">(' + (r.att === 1 ? 'first try' : r.att + ' tries') + ')</span><br><span class="small">' + esc(r.why) + '</span></li>').join('') + '</ol>').join('') + '</details><p id="subBtns"></p><p><button class="btn big green" id="qzGo" type="button">Continue to the game!</button></p>';
+  box.innerHTML = h; $('qzGo').addEventListener('click', goReady); box.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  S.pl.forEach((p, i) => sendScore(i));
+}
+$('qzStart').addEventListener('click', startQuiz);
+document.addEventListener('keydown', e => {
+  if ($('vReview').hidden || e.ctrlKey || e.metaKey || e.altKey) return; const Z = S.quiz; if (!Z) return;
+  if (!Z.running && !Z.counting && !$('qzIntroBox').hidden && (e.code === 'Space' || e.code === 'Enter')) { e.preventDefault(); return startQuiz(); }
+  if (!Z.running) return; let pi = -1, k = -1; for (let p = 0; p < S.n && pi < 0; p++) { const j = QKEYS[p].indexOf(e.code); if (j >= 0) { pi = p; k = j; } }
+  if (pi < 0 && S.n === 1) { const j = QKEYS[1].indexOf(e.code), d = QDIG.indexOf(e.code); if (j >= 0 || d >= 0) { pi = 0; k = j >= 0 ? j : d; } }
+  if (pi >= 0) { e.preventDefault(); answer(pi, k); }
+});
+// ---------------- sending results to the Google Sheet ----------------
+function payloadFor(i) { const p = S.pl[i], qz = p.quiz; return { v: 2, game: 'ess-review', sid: qz.sid, code: CFG0.classCode || '', ts: new Date().toISOString(), name: p.name, period: p.period, role: 'P' + (i + 1), players: S.n, mode: S.mode === 'adv' ? 'advanced' : 'classic', score: qz.score, max: qz.max, firstTry: qz.first, totalAttempts: qz.att, seconds: qz.secs, headStart: S.head && S.head.fast === i ? S.head.head : 0, items: qz.items, raw: { settings: Object.assign({}, ST), questions: qz.recap.map(r => ({ id: r.id, text: r.text.replace(/<[^>]+>/g, ''), answer: r.answer, attempts: r.att })) } }; }
+async function sendScore(i) {
+  const p = S.pl[i], msg = $('subMsg' + i), btns = $('subBtns'); if (!msg) return; const payload = payloadFor(i);
+  const extra = () => { const id = 'extra' + i; const old = $(id); if (old) old.remove(); if (p.sub && p.sub.status === 'ok') return; const span = document.createElement('span'); span.id = id; span.style.marginRight = '8px'; if (!CFG0.submitUrl || p.sub.status !== 'ok') { const b = document.createElement('button'); b.className = 'btn plain'; b.type = 'button'; b.textContent = 'Save ' + p.name + '\u2019s backup file'; b.addEventListener('click', () => backup(i)); span.appendChild(b); span.appendChild(document.createTextNode(' ')); } if (CFG0.submitUrl && p.sub.status === 'fail') { const r = document.createElement('button'); r.className = 'btn plain'; r.type = 'button'; r.textContent = 'Try sending ' + p.name + '\u2019s again'; r.addEventListener('click', () => { msg.className = 'stat'; msg.textContent = 'sending\u2026'; sendScore(i); }); span.appendChild(r); } btns.appendChild(span); };
+  if (!CFG0.submitUrl) { p.sub = { status: 'none' }; msg.className = 'stat bad'; msg.textContent = '\u2717 not connected to a Sheet'; extra(); return; }
+  try { let j = null; try { const r = await fetch(CFG0.submitUrl, { method: 'POST', body: JSON.stringify(payload) }); j = await r.json(); } catch (err) { await fetch(CFG0.submitUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }); j = { ok: true, unconfirmed: true }; }
+    if (j && j.ok) { p.sub = { status: 'ok' }; msg.className = 'stat ok'; msg.textContent = '\u2713 sent'; } else { p.sub = { status: 'fail' }; msg.className = 'stat bad'; msg.textContent = '\u2717 ' + ((j && j.error) || 'not sent') + (j && /code/.test(j.error || '') ? ' (tell your teacher the class code does not match)' : ''); }
+  } catch (err) { p.sub = { status: 'fail' }; msg.className = 'stat bad'; msg.textContent = '\u2717 could not reach the Sheet (check your internet)'; }
+  extra();
+}
+function backup(i) { const blob = new Blob([JSON.stringify(payloadFor(i), null, 1)], { type: 'application/json' }), a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'seafloor-salvage-' + norm(S.pl[i].name).replace(/[^a-z0-9]+/g, '-') + '.json'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500); }
+// ---------------- ready screen ----------------
+function goReady() {
+  show('vReady'); const adv = S.mode === 'adv', G0 = Object.assign({ valNodule: 10, valGold: 30 }, GC);
+  $('rdScores').innerHTML = '<table class="tbl"><tr><th>Player</th><th>Quiz time</th><th>First-try correct</th><th>Score</th><th>Starts the game</th></tr>' + S.pl.map((p, i) => '<tr><td><b style="color:' + PCOL[i] + '">' + esc(p.name) + '</b></td><td>' + p.quiz.secs.toFixed(1) + ' s</td><td>' + p.quiz.first + ' / ' + NQ + '</td><td>' + p.quiz.score + ' / ' + NQ + '</td><td>' + (S.lock[i] > 0 ? '<b>waits ' + S.lock[i].toFixed(1) + ' s</b>' : (S.n === 2 && S.head && S.head.head > 0 ? '<b>head start!</b>' : 'right away')) + '</td></tr>').join('') + '</table>';
+  const steer = '<p id="ctlP1"><b style="color:' + PCOL[0] + '">' + esc(S.pl[0].name) + '</b>: <span class="kbd">A</span> <span class="kbd">D</span> move, <span class="kbd">S</span> lower, <span class="kbd">W</span> raise' + (S.n === 1 ? ' (the arrow keys work too)' : '') + '</p>' + (S.n === 2 ? '<p id="ctlP2"><b style="color:' + PCOL[1] + '">' + esc(S.pl[1].name) + '</b>: <span class="kbd">\u2190</span> <span class="kbd">\u2192</span> move, <span class="kbd">\u2193</span> lower, <span class="kbd">\u2191</span> raise</p>' : '') + '<p class="small" style="margin-top:6px">Your crane is at the <b>back</b> of the boat, so the bucket trails behind you. Tap <b>down once</b>: the bucket drops to the seafloor and comes right back up by itself, so <b>aim before you drop</b>. Press <b>up</b> to bring it back early. Your boat turns to face the way you steer (not while the bucket is in the water).</p>';
+  const boxes = adv ? [['Your job', '<b>Manganese nodules</b> (<b>$' + G0.valNodule + '</b> each) and rare <b>gold nuggets</b> (<b>$' + G0.valGold + '</b>) ride the seafloor toward the trenches. Grab them with your crane. They go into your <b>cargo hold</b>.'], ['Steer', steer], ['Home port', 'Your ship starts at its <b>home port</b> on an island' + (S.n === 2 ? ' (' + esc(S.pl[0].name) + ' on the left, ' + esc(S.pl[1].name) + ' on the right)' : ' (the ' + (S.home < 0 ? 'left' : 'right') + ' island)') + '. When the hold is full, sail home with your crane raised. Docking <b>sells your cargo</b> automatically.'], (ST.upgrades.length ? ['Upgrades', 'Spend dollars at your port on upgrades, each with <b>Low, Medium, and High</b> levels: ' + ST.upgrades.map(k => ({ cap: '<b>cargo hold</b> size', crane: '<b>crane speed</b>', eng: '<b>engine speed</b>' }[k])).join(', ') + '. Buy with the buttons under the game, or press ' + (S.n === 2 ? '<span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span> (' + esc(S.pl[0].name) + ') and <span class="kbd">8</span> <span class="kbd">9</span> <span class="kbd">0</span> (' + esc(S.pl[1].name) + ')' : '<span class="kbd">1</span> <span class="kbd">2</span> <span class="kbd">3</span>') + '.'] : ['Upgrades', 'All of the upgrades are turned off in the settings, so you just earn dollars.']), ['Watch out!', 'Nodules you miss pile up in the trench, get <b>subducted</b>, and <b>erupt as lava</b>. The game ends after <b id="rdTarget">' + S.target + '</b> eruptions. The most <b>total dollars earned</b> wins!'], ['Magnetic flips!', 'The field flips at random. Then your compass points the other way and <b>left and right are swapped</b>. Everything starts slowly and <b>speeds up</b> as the game goes on.']]
+    : [['Your job', '<b>Manganese nodules</b> pop out of the <b>spreading center</b> and ride the moving seafloor toward the <b>trenches</b>. Steer your boat, lower your crane onto a nodule, and grab it before it sinks! A nodule is worth 1 point and a rare <b>gold nugget</b> is worth 3.'], ['Steer', steer], ['Cargo and port', 'Each nodule goes into your <b>cargo hold</b>, which holds only <b>' + ST.capClassic + '</b>. When it is full you cannot grab more. You only score when you <b>sail home to your port</b> on the ' + (S.n === 2 ? 'island at your end (' + esc(S.pl[0].name) + ' on the left, ' + esc(S.pl[1].name) + ' on the right)' : (S.home < 0 ? 'left' : 'right') + ' island') + ' with your <b>crane raised</b>. Docking unloads your cargo and <b>pays you</b>. Cargo still aboard when the game ends earns nothing.'], ['Watch out!', 'Nodules you miss pile up in the trench, get <b>subducted</b>, and <b>erupt as lava</b>. The game ends after <b id="rdTarget">' + S.target + '</b> eruptions.'], ['Magnetic flips!', 'The field flips at random. Then your compass points the other way and <b>left and right are swapped</b>. Everything starts slowly and <b>speeds up</b> as the game goes on.']];
+  if (S.n === 2 && ST.boatCollide) boxes.splice(boxes.length - 1, 0, ['Boats bump!', 'In a two-player game your boats are solid: they <b>bump and push each other</b>.' + (adv ? ' A boat with a <b>bigger engine</b> shoves a smaller one.' : '') + ' A boat sitting still is easy to shove, and a boat with its <b>crane lowered has little push</b>. So you cannot just park over the ridge and work your crane: keep moving, or be ready to <b>shove a camper off the ridge</b>!']);
+  $('howGrid').innerHTML = boxes.map(b => '<div class="box"><h3>' + b[0] + '</h3>' + (b[1].charAt(0) === '<' && b[1].charAt(1) === 'p' ? b[1] : '<p>' + b[1] + '</p>') + '</div>').join('');
+}
+// ---------------- the game ----------------
+let G = null, BGS = {}, ctx = null, phase = 'idle', last = 0, cnt = 0, raf = 0, overT = 0, touchOn = false, shopSig = [];
+const kb = [{ l: 0, r: 0, u: 0, d: 0 }, { l: 0, r: 0, u: 0, d: 0 }], tp = [{ l: 0, r: 0, u: 0, d: 0 }, { l: 0, r: 0, u: 0, d: 0 }];
+function fxPush(f) { f.life = f.max; G.fx.push(f); }
+const TRN = { cap: 'Cargo hold', crane: 'Crane speed', eng: 'Engine speed' };
+function handleEvents() {
+  for (const e of G.events) {
+    if (e.type === 'grab') { fxPush({ type: 'splash', x: e.x, y: e.y, r: 10, max: 0.5, vx: 0, vy: 0 }); SND.tone(380, 0.12, 'triangle', 0.14, 560); }
+    else if (e.type === 'collect') { fxPush({ type: 'text', text: e.value > 1 ? '+3 gold!' : '+1 nodule', x: e.x, y: WATER - 40, vx: 0, vy: -42, size: e.value > 1 ? 24 : 20, color: e.value > 1 ? '#8a5a00' : '#2f6b2a', max: 1.2 }); SND.tone(660, 0.12, 'triangle', 0.15, 990); if (e.value > 1) { SND.tone(880, 0.12, 'triangle', 0.14, 1320, 0.1); SND.tone(1175, 0.18, 'triangle', 0.14, 1568, 0.2); } }
+    else if (e.type === 'stow') { fxPush({ type: 'text', text: (e.kind === 'gold' ? 'gold' : 'nodule') + ' ' + e.n + '/' + e.cap, x: e.x, y: WATER - 40, vx: 0, vy: -38, size: 17, color: e.kind === 'gold' ? '#8a5a00' : '#2f6b2a', max: 1.1 }); SND.tone(660, 0.1, 'triangle', 0.13, 880); }
+    else if (e.type === 'sell') { fxPush({ type: 'text', text: (G.cfg.advanced ? '+$' + e.value : '+' + e.value + (e.value === 1 ? ' point' : ' points')) + (e.gold ? ' (gold!)' : ''), x: e.x, y: WATER - 50, vx: 0, vy: -34, size: 26, color: '#2f6b2a', max: 1.6 }); SND.tone(784, 0.1, 'triangle', 0.14); SND.tone(988, 0.1, 'triangle', 0.14, null, 0.09); SND.tone(1319, 0.2, 'triangle', 0.14, null, 0.18); }
+    else if (e.type === 'buy') { const p = G.players[e.p]; fxPush({ type: 'text', text: 'UPGRADE! ' + TRN[e.track], x: p.x, y: WATER - 54, vx: 0, vy: -30, size: 20, color: '#1d5d86', max: 1.8 }); SND.tone(523, 0.1, 'square', 0.1); SND.tone(784, 0.18, 'square', 0.1, null, 0.1); }
+    else if (e.type === 'full') { fxPush({ type: 'text', text: 'HOLD FULL! Sail home', x: e.x, y: Math.min(e.y, WATER + 30), vx: 0, vy: -22, size: 17, color: '#a82a1a', max: 1.4 }); SND.tone(180, 0.25, 'sawtooth', 0.1); }
+    else if (e.type === 'erupt') { for (let i = 0; i < 28; i++) { const a = -Math.PI / 2 + (Math.random() - 0.5) * 1.7, sp = 90 + Math.random() * 150; fxPush({ type: 'lava', x: e.x, y: e.y, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, g: 420, r: 4 + Math.random() * 5, max: 0.9 + Math.random() * 0.7 }); } fxPush({ type: 'text', text: 'ERUPTION!', x: e.x - Math.sign(e.x - CX) * 64, y: e.y + 26, vx: 0, vy: -26, size: 22, color: '#d8410d', max: 1.4 }); SND.boom(); }
+    else if (e.type === 'bump') { fxPush({ type: 'splash', x: e.x, y: WATER + 4, r: 8, max: 0.45, vx: 0, vy: 0 }); fxPush({ type: 'text', text: 'BUMP!', x: e.x, y: WATER - 70, vx: 0, vy: -26, size: 18, color: '#7a3a10', max: 0.8 }); SND.tone(120, 0.16, 'square', 0.14, 70); SND.tone(260, 0.07, 'triangle', 0.08, 180); }
+    else if (e.type === 'warn') { SND.tone(880, 0.12, 'square', 0.1); SND.tone(880, 0.12, 'square', 0.1, null, 0.22); SND.tone(880, 0.12, 'square', 0.1, null, 0.44); }
+    else if (e.type === 'flip') { G.lastFlipT = G.t; SND.tone(520, 0.45, 'sawtooth', 0.12, 160); }
+  } G.events.length = 0;
+}
+function updateFx(dt) { for (const f of G.fx) { f.life -= dt; if (f.vx !== undefined) { f.x += f.vx * dt; f.y += f.vy * dt; if (f.g) f.vy += f.g * dt; } if (f.type === 'splash') f.r += 40 * dt; } G.fx = G.fx.filter(f => f.life > 0); }
+function applyInput() { G.players.forEach((p, i) => { const a = kb[i], b = tp[i]; p.input.l = a.l || b.l; p.input.r = a.r || b.r; p.input.u = a.u || b.u; p.input.d = a.d || b.d; if (a.dTap || b.dTap) p.input.dTap = 1; if (a.uTap || b.uTap) p.input.uTap = 1; a.dTap = a.uTap = b.dTap = b.uTap = 0; }); }   // taps are latched so a quick press between two frames still counts
+function sizeGame() { const gc = $('gc'), wrap = gc.parentElement, w = Math.max(320, Math.floor(wrap.clientWidth || 900)), dpr = window.devicePixelRatio || 1; gc.style.width = w + 'px'; gc.style.height = Math.round(w * GHT / GW) + 'px'; gc.width = Math.round(w * dpr); gc.height = Math.round(w * GHT / GW * dpr); }   // fills the page width, so its edges line up with the buttons above and the panels below
+function getBG() { const adv = S.mode === 'adv', k = adv ? 'adv' + (GC.valNodule || 10) + '/' + (GC.valGold || 30) : 'classic'; if (!BGS[k]) BGS[k] = makeBackground(() => document.createElement('canvas'), 1.5, false, adv ? { nod: '$' + (GC.valNodule || 10), gold: '$' + (GC.valGold || 30) } : null); return BGS[k]; }
+const TUNE = { rampSeconds: 'rampT', flipMin: 'flipMin', flipMax: 'flipMax', flip0Min: 'flip0Min', flip0Max: 'flip0Max', speed0: 'speed0', speedMax: 'speedMax', speedMax2: 'speedMax2', spawn0: 'spawn0', spawnMin: 'spawnMin', spawnMin2: 'spawnMin2', subEvery: 'subEvery', valNodule: 'valNodule', valGold: 'valGold', capVals: 'capVals', craneMul: 'craneMul', engMul: 'engMul', costCap: 'costCap', costCrane: 'costCrane', costEng: 'costEng', boatVAdv: 'boatVAdv', boatCollide: 'collide', capClassic: 'capClassic', boatGap: 'boatGap', idleW: 'idleW', dragMin: 'dragMin' };
+function newGame() {
+  const adv = S.mode === 'adv', tune = {}; for (const k in TUNE) if (typeof GC[k] === 'number' || typeof GC[k] === 'boolean' || Array.isArray(GC[k])) tune[TUNE[k]] = GC[k];
+  tune.collR = { small: 15, normal: 20, large: 27 }[ST.bucket]; tune.collide = ST.boatCollide; tune.capClassic = ST.capClassic; tune.rampT = ST.rampSeconds; tune.flipMul = { off: 0, rare: 2, normal: 1, often: 0.5 }[ST.flips]; tune.goldP = { off: 0, rare: 0.07, normal: 0.15, common: 0.3 }[ST.gold]; tune.priceMul = { cheap: 0.5, normal: 1, pricey: 2 }[ST.prices]; tune.tracks = { cap: ST.upgrades.indexOf('cap') >= 0, crane: ST.upgrades.indexOf('crane') >= 0, eng: ST.upgrades.indexOf('eng') >= 0 };
+  G = new Game({ seed: (S.seed = S.seed * 7919 + 13) % 100000 + 1, target: S.target, advanced: adv, players: S.pl.map((p, i) => ({ name: p.name, color: PCOL[i], home: S.n === 1 ? S.home : (i === 0 ? -1 : 1), lock: S.lock[i] || 0 })), tune }); G.fx = []; G.lastFlipT = -99;
+  kb.forEach(o => { o.l = o.r = o.u = o.d = o.dTap = o.uTap = 0; }); tp.forEach(o => { o.l = o.r = o.u = o.d = o.dTap = o.uTap = 0; }); shopSig = []; S.pl.forEach((p, i) => { p.gsid = keyOf(p) + '|g|' + Date.now() + '|' + i; p.gsub = null; });
+}
+function startGame() {
+  show('vGame'); ctx = null; sizeGame(); ctx = $('gc').getContext('2d'); newGame(); phase = 'count'; cnt = 3.2; SND.init(); $('gTag').textContent = (S.n === 1 ? '1 player' : '2 players') + (S.mode === 'adv' ? ', advanced' : ', classic'); $('gCover').classList.remove('on');
+  $('gHelp').innerHTML = 'Move: <b>A</b>/<b>D</b> (Player 1), <b>\u2190</b>/<b>\u2192</b> (Player 2). Crane: tap <b>S</b> / <b>\u2193</b> once and the bucket drops to the seafloor and comes right back up (<b>W</b> / <b>\u2191</b> brings it back early), so aim first! Pause: <b>P</b>. Sail home with your crane up to unload and get paid.' + (S.n === 1 ? ' One player: either set of keys works.' : '') + (S.mode === 'adv' ? ' Shop (when docked): <b>1 2 3</b>' + (S.n === 2 ? ' / <b>8 9 0</b>' : ' or <b>8 9 0</b>') + '.' : '');
+  buildPads(); buildShop(); touchOn = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches); $('pads').classList.toggle('on', touchOn); last = performance.now(); cancelAnimationFrame(raf); raf = requestAnimationFrame(loop);
+}
+function buildPads() { const pads = $('pads'); pads.innerHTML = ''; S.pl.forEach((p, i) => { const d = document.createElement('div'); d.className = 'pad'; d.innerHTML = '<div class="nm" style="color:' + PCOL[i] + '">' + esc(p.name) + '</div><button data-k="l">\u25C0</button><button data-k="d">\u25BC</button><button data-k="r">\u25B6</button><span></span><button data-k="u">\u25B2</button><span></span>'; d.querySelectorAll('button').forEach(b => { const k = b.dataset.k, on = e => { e.preventDefault(); tp[i][k] = 1; if (k === 'd' || k === 'u') tp[i][k + 'Tap'] = 1; SND.init(); }, off = e => { e.preventDefault(); tp[i][k] = 0; }; b.addEventListener('pointerdown', on); b.addEventListener('pointerup', off); b.addEventListener('pointerleave', off); b.addEventListener('pointercancel', off); }); pads.appendChild(d); }); }
+// ---- upgrade shop (advanced mode) ----
+const SHOPKEYS = { Digit1: [0, 'cap'], Digit2: [0, 'crane'], Digit3: [0, 'eng'], Digit8: [1, 'cap'], Digit9: [1, 'crane'], Digit0: [1, 'eng'] };
+function buildShop() { const shop = $('shop'); shop.hidden = S.mode !== 'adv'; shop.innerHTML = ''; if (S.mode !== 'adv') return; S.pl.forEach((p, i) => { const d = document.createElement('div'); d.className = 'shopp'; d.id = 'shp' + i; d.style.borderColor = PCOL[i]; shop.appendChild(d); }); updateShop(true); }
+function effectText(p, tr) { const c = G.cfg, lv = p.lv[tr]; return tr === 'cap' ? 'holds ' + c.capVals[lv] : '\u00d7' + (tr === 'crane' ? c.craneMul[lv] : c.engMul[lv]) + ' speed'; }
+function updateShop(force) {
+  if (!G || S.mode !== 'adv') return;
+  G.players.forEach((p, i) => { const sig = JSON.stringify([p.cash, p.lv, p.cargo.length, p.docked]); if (!force && shopSig[i] === sig) return; shopSig[i] = sig; const keys = (S.n === 2 ? (i === 0 ? ['1', '2', '3'] : ['8', '9', '0']) : ['1', '2', '3']);
+    $('shp' + i).innerHTML = '<h3><span style="color:' + PCOL[i] + '">' + esc(p.name) + '</span> \u00b7 <b>$' + p.cash + '</b> \u00b7 hold ' + p.cargo.length + '/' + G.cap(p) + '</h3><div class="dockst' + (p.docked ? ' on' : '') + '">' + (p.docked ? '\u2693 Docked at your port: the shop is open' : 'Sail to your port (' + (p.home < 0 ? 'left' : 'right') + ' island), crane raised, to sell cargo and shop') + '</div>' + (['cap', 'crane', 'eng'].some(t => G.cfg.tracks[t]) ? '' : '<div class="small">All upgrades are turned off in the settings.</div>') +
+      ['cap', 'crane', 'eng'].map((tr, k) => { if (!G.cfg.tracks[tr]) return ''; const cost = G.cost(p, tr), lv = p.lv[tr], nx = LEVELNAMES[lv + 1], can = p.docked && cost !== null && p.cash >= cost; return '<div class="trk"><span class="nm"><b>' + TRN[tr] + '</b> (' + effectText(p, tr) + (cost !== null ? ' \u2192 ' + (tr === 'cap' ? 'holds ' + G.cfg.capVals[lv + 1] : '\u00d7' + (tr === 'crane' ? G.cfg.craneMul[lv + 1] : G.cfg.engMul[lv + 1])) : ' MAX') + ')</span><span>' + [0, 1, 2].map(n => '<i class="pip' + (lv > n ? ' on' : '') + '"></i>').join('') + '</span>' + (cost === null ? '<b>MAX</b>' : '<button class="btn ' + (can ? 'green' : 'plain') + '" data-i="' + i + '" data-t="' + tr + '" type="button"' + (can ? '' : ' disabled') + '><span class="kbd">' + keys[k] + '</span> ' + nx + ' $' + cost + '</button>') + '</div>'; }).join('');
+    $('shp' + i).querySelectorAll('button[data-t]').forEach(b => b.addEventListener('click', () => buyUp(+b.dataset.i, b.dataset.t))); });
+}
+function buyUp(i, tr) { if (!G || phase !== 'play') return; const r = G.buy(i, tr); if (!r.ok) SND.tone(180, 0.15, 'sawtooth', 0.08); handleEvents(); updateShop(true); }
+function loop(ts) {
+  raf = requestAnimationFrame(loop); const dt = Math.min(0.05, (ts - last) / 1000 || 0); last = ts; if (!G || !ctx) return;
+  if (phase === 'count') { const before = Math.ceil(cnt); cnt -= dt; if (Math.ceil(cnt) !== before && cnt > 0) SND.tone(440, 0.1, 'square', 0.1); if (cnt <= 0) { phase = 'play'; SND.tone(880, 0.3, 'square', 0.12); } }
+  if (phase === 'play') { applyInput(); G.update(dt); handleEvents(); updateShop(false); if (G.state === 'over') { phase = 'over'; overT = 1.8; SND.tone(660, 0.2, 'triangle', 0.14); SND.tone(520, 0.2, 'triangle', 0.14, null, 0.2); SND.tone(392, 0.4, 'triangle', 0.14, null, 0.4); } }
+  else if (phase === 'over') { overT -= dt; if (overT <= 0) { phase = 'done'; showOver(); return; } }
+  if (phase !== 'pause') updateFx(dt);
+  const gc = $('gc'); ctx.setTransform(gc.width / GW, 0, 0, gc.height / GHT, 0, 0); drawFrame(ctx, G, getBG(), performance.now() / 1000);
+  if (phase === 'count') { const n = Math.ceil(cnt), txt = cnt > 0.35 ? String(Math.max(1, Math.min(3, n))) : 'GO!'; htext(ctx, txt, CX, OFF + 290, 100, '#a8432f', 'center', 'rgba(244,232,190,.95)'); htext(ctx, 'Get ready!', CX, OFF + 210, 32, INK, 'center'); }
+  if (phase === 'over') htext(ctx, 'THE VOLCANOES ERUPTED!', CX, OFF + 270, 42, '#b0301f', 'center', 'rgba(244,232,190,.95)');
+}
+function pause(on) { kb.forEach(o => { o.dTap = o.uTap = 0; }); tp.forEach(o => { o.dTap = o.uTap = 0; }); if (phase === 'play' && on) { phase = 'pause'; $('gCoverT').textContent = 'Paused'; $('gCoverP').textContent = 'Press P or click Resume.'; $('gCover').classList.add('on'); $('gPause').textContent = 'Resume (P)'; } else if (phase === 'pause' && !on) { phase = 'play'; $('gCover').classList.remove('on'); $('gPause').textContent = 'Pause (P)'; } }
+$('gPause').addEventListener('click', () => pause(phase === 'play')); $('gResume').addEventListener('click', () => pause(false)); $('gSound').addEventListener('click', () => { const was = setInGame; setInGame = false; setVal('sound', !ST.sound); setInGame = was; SND.init(); });
+$('gTouch').addEventListener('click', () => { touchOn = !touchOn; $('pads').classList.toggle('on', touchOn); });
+$('gQuit').addEventListener('click', () => { phase = 'idle'; cancelAnimationFrame(raf); show('vSetup'); }); document.addEventListener('visibilitychange', () => { if (document.hidden) pause(true); });
+const KEYS = { KeyA: [0, 'l'], KeyD: [0, 'r'], KeyW: [0, 'u'], KeyS: [0, 'd'], ArrowLeft: [1, 'l'], ArrowRight: [1, 'r'], ArrowUp: [1, 'u'], ArrowDown: [1, 'd'] };
+function onKey(e, v) { if ($('vGame').hidden || !$('setDlg').hidden) return; if (e.code === 'KeyP' || e.code === 'Escape') { if (v) pause(phase === 'play'); e.preventDefault(); return; } const sk = SHOPKEYS[e.code]; if (sk && S.mode === 'adv') { e.preventDefault(); if (v && !e.repeat) buyUp(S.n === 1 ? 0 : sk[0], sk[1]); return; } const k = KEYS[e.code]; if (!k) return; e.preventDefault(); SND.init(); const pi = S.n === 1 ? 0 : k[0]; kb[pi][k[1]] = v; if (v && !e.repeat && (k[1] === 'd' || k[1] === 'u')) kb[pi][k[1] + 'Tap'] = 1; }
+document.addEventListener('keydown', e => onKey(e, 1)); document.addEventListener('keyup', e => onKey(e, 0)); window.addEventListener('blur', () => { kb.forEach(o => { o.l = o.r = o.u = o.d = 0; }); });
+window.addEventListener('resize', () => { if (!$('vGame').hidden) sizeGame(); });
+// ---- sending the finished game's score to the Sheet (this feeds the leaderboard page) ----
+function isStandard() { const adv = S.mode === 'adv', keys = ['rocksToEnd', 'rampSeconds', 'bucket', 'flips', 'gold'].concat(adv ? ['upgrades', 'prices'] : ['capClassic']); if (S.n === 2) keys.push('boatCollide'); return keys.every(k => same(ST[k], TD[k])); }   // settings that change how hard it is to score
+function gamePayload(i) {
+  const p = G.players[i], q = S.pl[i], o = G.players[1 - i], two = G.players.length === 2;
+  return { v: 2, game: 'ess-game', sid: q.gsid, code: CFG0.classCode || '', ts: new Date().toISOString(), name: q.name, period: q.period, role: 'P' + (i + 1), players: S.n, mode: S.mode === 'adv' ? 'advanced' : 'classic', score: p.score, delivered: p.got, gold: p.gold, unsold: p.cargo.length, seconds: Math.round(G.t), eruptions: G.erupted, flips: G.flips, won: two ? (p.score > o.score ? true : p.score < o.score ? false : null) : null, standard: isStandard(), lockSecs: +(S.lock[i] || 0).toFixed(1), settings: Object.assign({}, ST) };
+}
+async function sendGame(i) {
+  const q = S.pl[i], el = $('gs' + i), bt = $('gsb' + i); if (!el) return; const payload = gamePayload(i), say = (cls, t) => { el.className = 'stat ' + cls; el.textContent = t; }; bt.innerHTML = '';
+  const offer = (retry) => { const b = document.createElement('button'); b.className = 'btn plain'; b.type = 'button'; b.textContent = 'Save a backup file'; b.addEventListener('click', () => { const blob = new Blob([JSON.stringify(payload, null, 1)], { type: 'application/json' }), l = document.createElement('a'); l.href = URL.createObjectURL(blob); l.download = 'seafloor-salvage-game-' + norm(q.name).replace(/[^a-z0-9]+/g, '-') + '.json'; document.body.appendChild(l); l.click(); setTimeout(() => { URL.revokeObjectURL(l.href); l.remove(); }, 500); }); bt.appendChild(b); if (retry) { const r = document.createElement('button'); r.className = 'btn plain'; r.type = 'button'; r.textContent = 'Try sending again'; r.addEventListener('click', () => sendGame(i)); bt.appendChild(document.createTextNode(' ')); bt.appendChild(r); } };
+  if (!CFG0.submitUrl) { q.gsub = 'none'; say('bad', q.name + ': \u2717 not connected to a Sheet, so this score is not on the leaderboard'); offer(false); return; }
+  say('', q.name + ': sending score\u2026');
+  try { let j = null; try { const r = await fetch(CFG0.submitUrl, { method: 'POST', body: JSON.stringify(payload) }); j = await r.json(); } catch (err) { await fetch(CFG0.submitUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) }); j = { ok: true, unconfirmed: true }; }
+    if (j && j.ok) { q.gsub = 'ok'; say('ok', q.name + ': \u2713 score sent to the leaderboard'); } else { q.gsub = 'fail'; say('bad', q.name + ': \u2717 ' + ((j && j.error) || 'not sent') + (j && /code/.test(j.error || '') ? ' (the class code does not match)' : '')); offer(true); }
+  } catch (err) { q.gsub = 'fail'; say('bad', q.name + ': \u2717 could not reach the Sheet (check your internet)'); offer(true); }
+}
+function showOver() {
+  show('vOver'); const adv = S.mode === 'adv', ps = G.players.slice().sort((a, b) => b.score - a.score), unit = adv ? '$' : ''; let title;
+  if (S.n === 1) { const sc = G.players[0].score; title = adv ? (sc >= 1000 ? 'Master salvager!' : sc >= 500 ? 'Great shipping!' : 'The trenches won this time!') : (sc >= 60 ? 'Amazing salvage!' : sc >= 30 ? 'Nice work!' : 'The trenches won this time!'); } else title = ps[0].score === ps[1].score ? 'It\u2019s a tie!' : ps[0].name + ' wins!'; $('ovTitle').textContent = title;
+  const lvTxt = p => ['cap', 'crane', 'eng'].map(tr => TRN[tr].split(' ')[0] + ' ' + LEVELNAMES[p.lv[tr]]).join(', ');
+  $('ovBody').innerHTML = '<p>' + G.erupted + ' manganese nodules were subducted and erupted as lava, and the game lasted ' + Math.round(G.t) + ' seconds (' + Math.floor(G.t / 60) + ' min ' + Math.round(G.t % 60) + ' s). The magnetic field flipped ' + G.flips + ' times.</p>' + (adv ? '<table class="tbl"><tr><th>Player</th><th>Total earned</th><th>Cash left</th><th>Upgrades</th><th>Sold</th><th>Gold nuggets</th><th>Unsold cargo</th></tr>' + G.players.map((p, i) => '<tr><td><b style="color:' + PCOL[i] + '">' + esc(p.name) + '</b></td><td><b>$' + p.earned + '</b></td><td>$' + p.cash + '</td><td>' + lvTxt(p) + '</td><td>' + p.got + '</td><td>' + p.gold + '</td><td>' + p.cargo.length + '</td></tr>').join('') + '</table><p class="small">The winner has the most <b>total dollars earned</b>. Cargo still in your hold when the game ended was never sold.</p>' : '<table class="tbl"><tr><th>Player</th><th>Score</th><th>Delivered</th><th>Gold nuggets</th><th>Unsold cargo</th></tr>' + G.players.map((p, i) => '<tr><td><b style="color:' + PCOL[i] + '">' + esc(p.name) + '</b></td><td><b>' + p.score + '</b></td><td>' + p.got + '</td><td>' + p.gold + '</td><td>' + p.cargo.length + '</td></tr>').join('') + '</table><p class="small">Manganese nodules count 1 point and gold nuggets count 3, but only once they are unloaded at your port. Cargo still aboard when the game ended earned nothing, and anything you missed piled up in the trench and erupted from the volcanic arcs.</p>');
+  $('ovBody').insertAdjacentHTML('beforeend', '<div class="box" style="margin:10px 0"><b>Your score and the leaderboard</b>' + G.players.map((p, i) => '<p style="margin:6px 0"><span class="stat" id="gs' + i + '"></span> <span id="gsb' + i + '"></span></p>').join('') + (isStandard() ? '' : '<p class="small">These games used custom settings, so the leaderboard marks them as unranked.</p>') + '</div>');
+  G.players.forEach((p, i) => sendGame(i));
+  drawArt($('art2'));
+}
+$('again').addEventListener('click', () => { if (!S.pl.length) return show('vSetup'); beginQuiz(); }); $('newp').addEventListener('click', () => { S.pl = []; show('vSetup'); });
+$('goGame').addEventListener('click', () => startGame());
+function drawArt(cv) { const bg = BGS.classic || (BGS.classic = makeBackground(() => document.createElement('canvas'), 1.5)); cv.width = 1000; cv.height = 360; const c = cv.getContext('2d'), Gd = new Game({ seed: 3, target: 99, players: [{ name: 'Player 1', color: PCOL[0] }, { name: 'Player 2', color: PCOL[1] }] }); Gd.players[0].x = 330; Gd.players[1].x = 640; Gd.players[0].hy = 215; Gd.players[1].hy = 200; Gd.t = 99; Gd.pol = 1; Gd.bounds = [60, 140, 220, 330, 420, 520, 600]; Gd.fx = []; c.save(); drawFrame(c, Gd, bg, 0.3, true); c.restore(); cv.style.width = '100%'; }
+try { drawArt($('art')); } catch (e) {}
+window.__ess = { gamePayload, isStandard, ST, TD, SPEC, LOCK, MENU, setVal, openSettings, closeSettings, applyPreset, S, GC, BANK, factor, getG: () => G, getPhase: () => phase, startGame, payloadFor, kb, quiz: () => S.quiz, answer, goReady, buyUp, skipCount: () => { cnt = 0.01; }, getShop: () => shopSig };
+})();
+
+</script>
+</body>
+</html>
